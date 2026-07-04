@@ -1,0 +1,16 @@
+{
+  "name": "pfc-intake-completeness-check",
+  "description": "Recalculate readiness score and missing data after project intake changes.",
+  "scope": "workspace",
+  "trigger": {
+    "event": "file_save",
+    "patterns": [
+      ".pm/intake/project-intake.yaml"
+    ]
+  },
+  "action": {
+    "type": "agent_prompt",
+    "agent": "pm-controller",
+    "prompt": "Run intake-gate. Recalculate readiness score, update missing-data-log, select M0/M1/M2/M3 mode, and list blocked outputs."
+  }
+}

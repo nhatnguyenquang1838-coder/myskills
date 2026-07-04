@@ -1,0 +1,152 @@
+project:
+  id: PRJ-001
+  name: MVP2 Telegram Notification
+  baseline_version: BL-001
+  readiness_mode: M3
+  baseline_status: controlled
+  reporting_date: 2026-07-04
+
+work_packages:
+  - id: WP-001
+    name: Telegram notification
+    status: approved
+    milestone_ids: [MS-001]
+    evidence_ids: [EVD-001]
+    assumption_ids: []
+    decision_ids: [DEC-001]
+    risk_ids: [RISK-001]
+    baseline_version: BL-001
+    confidence: high
+    last_updated: 2026-07-04
+
+milestones:
+  - id: MS-001
+    name: MVP2 release
+    work_package_ids: [WP-001]
+    start_date: 2026-07-01
+    end_date: 2026-07-31
+    dependency_ids: [DEP-001]
+    status: planned
+    evidence_ids: [EVD-002]
+    assumption_ids: []
+    decision_ids: [DEC-001]
+    risk_ids: [RISK-001]
+    baseline_version: BL-001
+    confidence: high
+    last_updated: 2026-07-04
+
+dependencies:
+  - id: DEP-001
+    name: Telegram Bot API readiness
+    from: External API
+    to: WP-001
+    status: at_risk
+    evidence_ids: [EVD-004]
+    assumption_ids: []
+    decision_ids: []
+    risk_ids: [RISK-001]
+    baseline_version: BL-001
+    confidence: medium
+    last_updated: 2026-07-04
+
+resource_allocations:
+  - id: RA-001
+    work_package_id: WP-001
+    milestone_id: MS-001
+    role: Backend Developer
+    fte: 1.0
+    start_date: 2026-07-01
+    end_date: 2026-07-31
+    rate_card_id: RATE-001
+    evidence_ids: [EVD-003]
+    assumption_ids: []
+    decision_ids: []
+    risk_ids: []
+    baseline_version: BL-001
+    confidence: high
+    last_updated: 2026-07-04
+
+rate_cards:
+  - id: RATE-001
+    role: Backend Developer
+    monthly_rate: 5000
+    currency: USD
+    source: vendor contract
+    evidence_ids: [EVD-003]
+    assumption_ids: []
+    decision_ids: []
+    risk_ids: []
+    baseline_version: BL-001
+    confidence: high
+    last_updated: 2026-07-04
+
+cost_lines:
+  - id: COST-001
+    resource_allocation_id: RA-001
+    work_package_id: WP-001
+    formula: fte * monthly_rate * duration_months
+    amount: 5000
+    currency: USD
+    derived_from: [RA-001, RATE-001]
+    assumption_ids: []
+    evidence_ids: [EVD-003]
+
+forecasts:
+  - id: FCST-001
+    baseline_budget: 10000
+    forecast_amount: 5000
+    variance: -5000
+    status: green
+    cost_line_ids: [COST-001]
+    derived_from: [COST-001]
+
+reports:
+  - id: RPT-001
+    type: baseline
+    timeline_status: green
+    resource_status: green
+    budget_status: green
+    overall_status: amber
+    source_ids: [MS-001, RA-001, FCST-001, RISK-001]
+
+evidence:
+  - id: EVD-001
+    source_type: confluence
+    source_name: approved scope page
+    date: 2026-07-04
+    confidence: high
+  - id: EVD-002
+    source_type: project_plan
+    source_name: approved milestone plan
+    date: 2026-07-04
+    confidence: high
+  - id: EVD-003
+    source_type: contract
+    source_name: vendor rate card
+    date: 2026-07-04
+    confidence: high
+  - id: EVD-004
+    source_type: meeting_note
+    source_name: API readiness note
+    date: 2026-07-04
+    confidence: medium
+
+assumptions: []
+
+risks:
+  - id: RISK-001
+    description: Telegram Bot API readiness may delay MVP2 release.
+    probability: medium
+    impact: high
+    owner: API Team
+    status: open
+
+decisions:
+  - id: DEC-001
+    text: Include Telegram notification in MVP2 baseline.
+    date: 2026-07-04
+    owner: PM
+    evidence_ids: [EVD-001]
+
+change_requests: []
+missing_data: []

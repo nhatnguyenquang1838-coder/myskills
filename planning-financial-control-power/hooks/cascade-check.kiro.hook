@@ -1,0 +1,16 @@
+{
+  "name": "pfc-cascade-check",
+  "description": "Check graph cascade impact after project-control changes.",
+  "scope": "workspace",
+  "trigger": {
+    "event": "file_save",
+    "patterns": [
+      ".pm/control/project-control.yaml"
+    ]
+  },
+  "action": {
+    "type": "agent_prompt",
+    "agent": "pm-controller",
+    "prompt": "Run cascade-impact-check for changed Project Control Graph nodes. Identify affected WP/MS/RA/COST/FCST/RPT nodes, required skills, missing data, and report impact."
+  }
+}

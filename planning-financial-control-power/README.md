@@ -3,7 +3,7 @@
 Version: `0.2.0-draft`
 Status: MVP-live candidate
 
-This Kiro Power coordinates planning, resource allocation, cost calculation, reporting, intake/onboarding, context loading, historical data usage, DL Skill contract routing, workflow enforcement, native Kiro hooks, parallel-safe agent action logging, and anti-hallucination controls.
+This Kiro Power coordinates planning, resource allocation, cost calculation, reporting, intake/onboarding, context loading, historical data usage, DL Skill contract routing, workflow enforcement, native Kiro hooks, bounded multi-agent convergence, parallel-safe agent action logging, deterministic finance checks, and anti-hallucination controls.
 
 ## Core model
 
@@ -24,8 +24,12 @@ PFC Power owns:
 - Run Context Graph
 - readiness mode
 - use-case standard
+- bounded convergence loops
+- State Lock for controlled graph writes
 - DL Skill contract validation
 - output validation
+- deterministic finance invariants
+- BCBS239 action lineage tags
 - guardrails
 - circuit breaker
 - enforcement gates
@@ -66,11 +70,67 @@ _work/         plan/tasks/risks/decisions to bring Power live
 | M2 | Forecast Ready | Cost forecast, variance, planning-finance impact |
 | M3 | Controlled Baseline | RAG, executive report, baseline variance, change control |
 
+## Execution patterns
+
+| Pattern | Use when | Control rule |
+|---|---|---|
+| Linear cascade | one agent output feeds the next without conflict | validate each output then continue |
+| Bounded-Convergence-Loop | agents return conflicting but negotiable deltas | negotiate up to `MAX_ITERATIONS = 3`, then converge/downgrade/block |
+
+Bounded convergence is used for conflicts such as:
+
+```txt
+budget cut -> resource conflict -> timeline delay -> forecast recalculation
+```
+
+Hard rules:
+
+```txt
+MAX_ITERATIONS = 3
+No unbounded agent debate
+No full conversation replay into each iteration
+No graph write during negotiation
+No invented compromise after iteration 3
+```
+
+## State Lock
+
+Controlled graph writes must use a State Lock.
+
+```txt
+.pm/control/.project-control.lock
+```
+
+State Lock protects:
+
+```txt
+.pm/control/project-control.yaml
+templates/project-control.yaml when used as a controlled baseline source
+baseline_freeze
+controlled_update
+bounded_convergence
+forecast/cost recalculation write-back
+```
+
+Write-back requires:
+
+```txt
+State Lock acquired
+state_hash_before still matches
+breaker CLOSED
+schema validation passed
+programmatic invariants passed
+BCBS239 lineage tags present
+user approval if persistent graph mutation is requested
+```
+
 ## Non-negotiable rules
 
 ```txt
 No baseline -> no official RAG
 No rate/resource/budget data -> no reliable budget status
+No deterministic reconciliation -> no cost/budget write-back
+No BCBS239 principle tag -> no semantic action log validity
 No evidence -> mark as assumption
 No link -> no claim
 No DL Skill contract -> no controlled skill call
@@ -78,6 +138,7 @@ History can challenge the plan, not replace the baseline
 DL Skills return draft deltas only; PFC controls write-back
 MCP stdio tools must not write diagnostics to stdout
 Parallel runs must write to per-run log files
+Never pass full trailing conversation history after a Circuit Breaker trip
 ```
 
 ## Live definition
@@ -94,6 +155,7 @@ The Power is considered MVP live when a user can:
 7. Produce run execution records and checkpoints.
 8. Capture per-run semantic action logs for later analysis.
 9. Install native Kiro v1 hooks into `.kiro/hooks/`.
+10. Run deterministic finance invariants before budget/cost write-back.
 ```
 
 ## Bootstrap target workspace
@@ -152,20 +214,33 @@ Installed target after bootstrap:
 .kiro/hooks/pfc-workspace-hooks.json
 ```
 
+Hooks must declare:
+
+```txt
+execution_tier: blocking | async
+```
+
+Tier behavior:
+
+| Tier | Behavior | Examples |
+|---|---|---|
+| blocking | synchronous, protects critical path | schema checks, baseline checks, deterministic finance invariant checks |
+| async | background, non-blocking quality review | context audit, workflow gap review, BCBS239 qualitative review |
+
 Enabled by default:
 
 ```txt
-pfc-cascade-check
-pfc-report-fact-check
+pfc-cascade-check        # async
+pfc-report-fact-check    # async
 ```
 
 Disabled by default until narrowed in Kiro IDE pilot:
 
 ```txt
-pfc-enforcement-preflight
-pfc-enforcement-contract-gate
-pfc-enforcement-output-gate
-pfc-enforcement-writeback-gate
+pfc-enforcement-preflight       # blocking
+pfc-enforcement-contract-gate   # blocking
+pfc-enforcement-output-gate     # blocking
+pfc-enforcement-writeback-gate  # blocking
 ```
 
 ## Production logging model
@@ -185,6 +260,24 @@ LLM analyzes logs only when explicitly requested.
 | Turn analysis | `.pm/audit/runs/{run_id}.turn-analysis.md` | human-readable review | ON-DEMAND |
 | Raw IDE events | `.pm/audit/runs/{run_id}.ide-event.ndjson` | debug/failure trace | OPTIONAL |
 | Aggregate debug | `.kiro/logs/power_steps.log` | convenience only, not source of truth | OFF by default |
+
+Semantic action logs require BCBS239 tags from:
+
+```txt
+knowledge/references/bcbs239/
+```
+
+Allowed tags:
+
+```txt
+01-governance-and-infrastructure
+02-risk-data-aggregation
+03-risk-reporting-practices
+04-supervisory-review-remediation
+05-2023-progress-lessons
+06-pfc-skill-guardrail-map
+07-bcbs239-skill-contract-guidance
+```
 
 Safe Python utility:
 
@@ -207,6 +300,7 @@ append_agent_action_log({
     "agent": "pm-controller",
     "action_type": "READINESS_CHECKED",
     "status": "PASS",
+    "bcbs239_principle_tag": ["01-governance-and-infrastructure"],
     "summary": "Readiness mode selected."
 })
 ```
@@ -241,6 +335,24 @@ stderr/local file = logging channel
 
 Do not use Python `print()` or Node `console.log()` for diagnostics inside stdio MCP tools. Use `logging`, `print(..., file=sys.stderr)`, `console.error()`, or append-only local log files.
 
+## Circuit Breaker context isolation
+
+After any `HALF_OPEN` or `OPEN` breaker state:
+
+```txt
+Do not pass full trailing conversation history.
+Run Isolate-and-Condense.
+Inject only the failure recovery packet.
+```
+
+Allowed recovery packet:
+
+```txt
+1. 2-sentence failure summary
+2. exact breached constraint from contract/schema/policy
+3. structured error log from templates/circuit-breaker-log.md
+```
+
 ## Validate assets
 
 Install dependencies:
@@ -272,6 +384,18 @@ Validate Kiro hooks:
 python tools/validate_kiro_hooks.py hooks/kiro-v1/pfc-workspace-hooks.json
 ```
 
+Run output enforcement / deterministic finance checks:
+
+```bash
+python tools/check_pfc_output_enforcement.py path/to/output.md
+```
+
+If a DL-27 finance total fails, the checker prints:
+
+```txt
+TRIP: enforcement-output-gate.kiro.hook
+```
+
 ## Current MVP gate
 
 Target readiness:
@@ -292,6 +416,7 @@ Known limitations:
 Full graph/contract validators still need to be run in a true clean local checkout.
 Kiro IDE runtime behavior for enabled hooks still needs pilot observation.
 Memory-index and history-index schema validators are still missing.
+Tiered hook execution and deterministic finance invariants need clean-checkout smoke tests.
 ```
 
 ## Work control

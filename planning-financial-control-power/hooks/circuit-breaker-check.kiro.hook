@@ -1,0 +1,14 @@
+{
+  "name": "pfc-circuit-breaker-check",
+  "description": "Run Circuit Breaker before official reports, forecasts, baseline upgrades, or executive outputs.",
+  "scope": "workspace",
+  "trigger": {
+    "event": "manual",
+    "command": "pfc-circuit-breaker-check"
+  },
+  "action": {
+    "type": "agent_prompt",
+    "agent": "pm-controller",
+    "prompt": "Run circuit-breaker against the current output draft and Project Control Graph. Check evidence, baseline, finance, context, cascade, and history-bias breakers. Return state, severity, blocked claims, fallback, and recovery questions."
+  }
+}

@@ -1,104 +1,56 @@
-# Kiro Handoff — Finish PFC Power to MVP Live
+# KIRO HANDOFF: PFC Power Architecture Hardening & Optimization
 
 Repo: `nhatnguyenquang1838-coder/myskills`
 
 Target package: `planning-financial-control-power/`
 
+Target local path in Kiro workspace: `myskills-main/planning-financial-control-power`
+
 ## Mission
 
-Finish the Planning & Financial Control Power to MVP-live validation status inside Kiro IDE.
+Refactor the runtime execution engine, memory controllers, hook execution model, logging discipline, and schema validation layers to resolve execution bottlenecks, prevent context window exhaustion, and enforce deterministic BCBS 239-aligned controls.
 
-MVP live means a user can bootstrap the Power into a workspace, validate graph/contracts, run baseline/report/change-control scenarios, and rely on Circuit Breaker + guardrails to block unsupported official claims.
-
-## Boundary
-
-PFC Power owns orchestration, graph, runtime, contracts, validation, guardrails, circuit breaker, checkpoint, and audit.
-
-DL Skills are external black-box capabilities described by contracts only.
-
-Do not modify or rebuild the DL Skill base. Do not copy DL Skill implementation into this Power. Do not treat samples as standards. Do not claim hooks are production-ready unless Kiro hook schema is verified.
+This is an architecture-hardening task. Do not rewrite the entire Power. Do not rebuild the external DL Skill base. DL Skills remain black-box capabilities consumed through contracts.
 
 ## Read first
 
-Read these files in order:
-
-1. `README.md`
-2. `_work/PLAN.md`
-3. `_work/TASKS.md`
-4. `_work/ROADMAP.md`
-5. `_work/DECISIONS.md`
-6. `_work/RISKS.md`
-7. `_work/milestones/v0.2-contract-runtime-live.md`
-8. `POWER.md`
-9. `steering/13-use-case-standard-policy.md`
-10. `steering/14-dl-skill-contract-policy.md`
-11. `steering/15-runtime-execution-policy.md`
-12. `steering/16-run-graph-policy.md`
-13. `steering/17-complex-use-case-gate.md`
-14. `knowledge/use-cases/use-case-standard-guideline.md`
-15. `knowledge/use-cases/uc-00-create-controlled-baseline-standard.md`
-16. `knowledge/runtime/pfc-runtime-execution-engine.md`
-17. `knowledge/runtime/circuit-breaker-state-machine.md`
-18. `contracts/dl-skill-contract-registry.md`
-19. `contracts/dl-skills/`
-20. `schemas/`
-21. `tools/`
-22. `scripts/`
-23. `tests/use-cases/uc-test-suite-22.md`
-24. `tests/use-cases/uc-test-matrix.md`
-25. `tests/readiness-scorecard.md`
-
-## Current status
-
-Readiness score: `3.72 / 5`
-
-Status: `MVP-live candidate`
-
-Open blockers:
-
-- `BLOCKER-06`: hooks not schema-verified
-- `BLOCKER-07`: validators not yet run in a clean local checkout
-- `BLOCKER-08`: bootstrap not yet tested in a real target workspace
-
-Your job is to close or clearly document these blockers.
-
-## Required architecture
-
-Follow this pipeline strictly:
+Read these files before changing anything:
 
 ```txt
-User request
--> Use Case Resolver
--> Readiness Mode Engine
--> Run Context Graph
--> DL Skill Contract Selector
--> Precondition Validation
--> DL Skill Execution as black box
--> Output Validation
--> Draft Graph Delta
--> Cascade / Context / Fact / Bias / Hallucination Checks
--> Circuit Breaker
--> Output / Write-back / Block
--> Checkpoint
+_work/CONVERSATION-WRAP-UP-2026-07-04.md
+README.md
+_work/TASKS.md
+_work/RISKS.md
+_work/DECISIONS.md
+steering/11-circuit-breaker-policy.md
+steering/16-run-graph-policy.md
+steering/18-workflow-enforcement-policy.md
+steering/19-agent-action-logging-policy.md
+steering/20-logging-depth-policy.md
+knowledge/runtime/pfc-runtime-execution-engine.md
+knowledge/support/memory-context-controller.md
+schemas/agent-action-log.schema.json
+schemas/dl-skill-contract.schema.json
+contracts/dl-skill-contract-schema.yaml
+templates/circuit-breaker-log.md
+tools/check_pfc_output_enforcement.py
+tools/kiro_safe_logging.py
+knowledge/references/bcbs239/
 ```
 
-Every meaningful output must include:
+## Current baseline
 
 ```txt
-Mode:
-Run type:
-Use case:
-Contracts used:
-Skills called:
-Graph nodes read:
-Graph deltas proposed:
-Circuit breaker state:
-Allowed output:
-Blocked claims:
-Next action:
+Status: stronger MVP-live candidate
+Readiness: 3.91 / 5
+Remaining blockers:
+- BLOCKER-06: hooks not schema-verified
+- BLOCKER-07: validators not yet run in clean local checkout
+- BLOCKER-08: bootstrap not tested in real target workspace
+- BLOCKER-10: logging smoke test not yet run in clean workspace
 ```
 
-## Hard guardrails
+## Non-negotiable guardrails
 
 ```txt
 No baseline -> no official RAG
@@ -109,157 +61,335 @@ No contract -> no controlled skill call
 History = benchmark only
 DL Skills return draft deltas only
 Only PFC writes approved deltas
+MCP stdio tools must not write diagnostics to stdout
+Parallel runs must write to per-run log files
+Do not mark hooks production-ready unless schema is verified
 ```
 
-## Branch rule
+---
 
-Create a separate branch or worktree, for example:
+# TASK 1 — Implement Multi-Agent Convergence Loops / State Negotiation
+
+## Goal
+
+Transition from a strict one-way cascading graph to a bounded negotiation loop to resolve cross-agent conflicts.
+
+Examples:
 
 ```txt
-git checkout -b pfc-v0.2-live-validation
+budget cut -> resource reduction -> timeline delay -> cost reforecast
+rate-card increase -> budget pressure -> scope/timeline option tradeoff
+milestone acceleration -> resource conflict -> finance impact
 ```
 
-Do not work on an unrelated active branch.
+## Required changes
 
-## Required validation
+### 1. Update `steering/16-run-graph-policy.md`
 
-From `planning-financial-control-power/`, install dependencies:
+Define a new execution pattern:
 
 ```txt
-pip install pyyaml jsonschema
+Bounded-Convergence-Loop
 ```
 
-Run graph validation:
+Required semantics:
 
 ```txt
-python tools/validate_project_control.py tests/fixtures/valid-project-control.yaml
-python tools/validate_project_control.py tests/fixtures/invalid-project-control.yaml
+MAX_ITERATIONS = 3
 ```
 
-Expected:
+The loop allows bounded negotiation between agents such as:
 
 ```txt
-valid-project-control.yaml -> PASS
-invalid-project-control.yaml -> FAIL
+finance-analyst <-> resource-planner
+resource-planner <-> timeline-planner
+pm-controller <-> pm-fact-checker
 ```
 
-Run contract validation for all P0 contracts:
+The loop must stop when one condition is true:
 
 ```txt
-contracts/dl-skills/DL-00-CORE-cognitive-intake-gate.yaml
-contracts/dl-skills/DL-11-PLAN-release-milestone-planner.yaml
-contracts/dl-skills/DL-12-PLAN-resource-allocator.yaml
-contracts/dl-skills/DL-27-FIN-project-cost-calculator.yaml
-contracts/dl-skills/DL-26-RPT-report-builder.yaml
+1. all changed graph deltas converge
+2. MAX_ITERATIONS reached
+3. Circuit Breaker opens
+4. user decision is required
+5. write-back is unsafe
 ```
 
-Expected: all 5 pass with `tools/validate_dl_contract.py`.
-
-If anything fails, fix the schema, fixture, or contract. Do not bypass validation.
-
-## Add E2E validation runner
-
-Create:
+Required output after convergence:
 
 ```txt
-tools/run_pfc_validation.py
+convergence_status: converged | not_converged | blocked | decision_required
+iterations_used:
+conflicts_resolved:
+conflicts_remaining:
+recommended_next_action:
 ```
 
-It should run:
+### 2. Update `knowledge/runtime/pfc-runtime-execution-engine.md`
 
-1. valid Project Control Graph fixture
-2. invalid Project Control Graph fixture, expected fail
-3. all 5 P0 DL Skill contracts
+Introduce a `State Lock` mechanism.
 
-Expected summary:
+When an agent is writing to:
 
 ```txt
-PFC Validation Summary
-- Project graph valid fixture: PASS
-- Project graph invalid fixture: EXPECTED FAIL
-- DL-00 contract: PASS
-- DL-11 contract: PASS
-- DL-12 contract: PASS
-- DL-27 contract: PASS
-- DL-26 contract: PASS
-Overall: PASS
+templates/project-control.yaml
+.pm/control/project-control.yaml
 ```
 
-Also add:
+or proposing an approved graph write-back, state must be locked to prevent concurrent conflicting writes.
+
+Required lock contract:
 
 ```txt
-tools/validation-report-template.md
+lock_id
+run_id
+owner_agent
+locked_graph_nodes
+lock_reason
+created_at
+expires_at
+status: active | released | expired | blocked
 ```
 
-## Test workspace bootstrap
-
-Run the shell bootstrap against a temporary target workspace and verify `.pm/` is created with:
+Rules:
 
 ```txt
-control/project-control.yaml
-intake/project-intake.yaml
-audit/readiness-score.md
-audit/missing-data-log.md
-audit/circuit-breaker-log.md
-audit/context-retrieval-log.md
-audit/run-execution-record.md
-reports/
-history/
-checkpoints/
-memory/memory-index.yaml
+Only pm-controller can approve final write-back.
+DL Skills and supporting agents may only propose draft deltas.
+If lock exists, other agents must read current state but cannot write overlapping nodes.
+If lock expires, pm-controller must re-check graph state before write-back.
 ```
 
-If bootstrap `project-control.yaml` is an M0 draft template and not schema-valid, document that clearly.
+---
 
-## Run 6 critical UC tests
+# TASK 2 — Refactor Hooks to Tiered Asynchronous Execution
 
-Use `tests/use-cases/uc-test-suite-22.md`.
+## Goal
 
-Run these first:
+Reduce blocking latency on the critical path by separating fast structural checks from heavy qualitative audits.
 
-- UC-02 Start Project With Idea Only
-- UC-01 Create Full Controlled Baseline
-- UC-07 Update Milestone Date
-- UC-15 Calculate Cost Forecast
-- UC-20 Generate Executive Report
-- UC-22 Unsupported RAG / Budget Claim Breaker
+## Required changes
 
-Create:
+### 1. Update `schemas/kiro-hook.schema.json`
 
-```txt
-tests/use-cases/uc-test-results.md
+Add required property:
+
+```yaml
+execution_tier: blocking | async
 ```
 
-Minimum rule:
+Rules:
 
 ```txt
-If UC-22 fails, the Power is unsafe.
-If UC-01 fails, complex UCs cannot run officially.
-If UC-07 fails, cascade control is broken.
-If UC-15 fails, finance forecast is unreliable.
+blocking = must complete before the semantic turn continues
+async = can run after the semantic turn starts/continues and report result later
 ```
 
-## Hook schema verification
+### 2. Modify `steering/20-logging-depth-policy.md`
 
-Current hook files are templates.
-
-Verify actual Kiro hook schema in Kiro IDE or official docs.
-
-If verified, update `hooks/`.
-
-If not verified, keep status:
+Define hook execution tiers:
 
 ```txt
-Hook templates only. Not production executable.
+Tier 1 — blocking
+- synchronous YAML/JSON structural validation
+- graph schema check
+- contract schema check
+- baseline-upgrade-check.kiro.hook
+- enforcement-preflight.kiro.hook when it blocks unsafe action
+
+Tier 2 — async
+- context-audit.kiro.hook
+- workflow-gap-review.md driven audits
+- heavy memory/history reviews
+- long-running BCBS239 quality review
+- non-critical scorecard enrichment
 ```
 
-Update `_work/RISKS.md`, `_work/TASKS.md`, and `tests/readiness-scorecard.md` accordingly.
-
-## Required files to update after work
-
-Update:
+Rules:
 
 ```txt
+Tier 1 failures can block the next action.
+Tier 2 failures must create async audit result and may open follow-up blocker, but should not freeze the agent unless the result identifies S3/S4 severity.
+```
+
+### 3. Update or create `tools/validate_kiro_hooks.py`
+
+Refactor the script to parse `execution_tier`.
+
+Required behavior:
+
+```txt
+- validate that every hook declares execution_tier
+- validate execution_tier is one of blocking|async
+- fail if a blocking hook has no bounded timeout
+- warn if async hook can mutate graph state directly
+- enforce async hooks write results to .pm/audit/runs/{run_id}.* and do not block the main semantic turn
+```
+
+Do not overclaim true background execution unless Kiro hook runtime supports it. If actual Kiro async execution cannot be verified, document this as:
+
+```txt
+async policy defined; runtime executor pending Kiro schema verification
+```
+
+---
+
+# TASK 3 — Fix Circuit Breaker Context Exhaustion Loops
+
+## Goal
+
+Prevent LLM hallucinations and token limit crashes after a circuit breaker trip by isolating failure context.
+
+## Required changes
+
+### 1. Update `steering/11-circuit-breaker-policy.md`
+
+Add strict directive:
+
+```txt
+Never pass the full trailing conversational history to an agent after a Circuit Breaker trip.
+```
+
+Add failure-context rule:
+
+```txt
+After Circuit Breaker OPEN, all recovery prompts must use Isolate-and-Condense context.
+```
+
+### 2. Update `knowledge/support/memory-context-controller.md`
+
+Implement an `Isolate-and-Condense` function.
+
+When Circuit Breaker trips, Kiro must intercept the recovery prompt window, wipe/ignore the conversational memory buffer, and inject only:
+
+```txt
+1. A 2-sentence summary of the failure state.
+2. The exact breached constraint from contracts/dl-skill-contract-schema.yaml or the relevant DL contract.
+3. The structured error log from templates/circuit-breaker-log.md or .pm/audit/circuit-breaker-log.md.
+```
+
+Required output shape:
+
+```yaml
+isolate_and_condense:
+  breaker_id:
+  severity:
+  failure_summary_2_sentences:
+  breached_constraint:
+  circuit_breaker_log_ref:
+  allowed_recovery_actions:
+  blocked_recovery_actions:
+  context_excluded:
+    - trailing_conversation_history
+    - unrelated_memory
+    - historical_benchmark_unless_requested
+```
+
+Rules:
+
+```txt
+No raw full chat history after breaker trip.
+No broad memory scan after breaker trip.
+No historical benchmark unless recovery explicitly asks for benchmark comparison.
+Recovery must be bounded to the breached constraint and affected graph nodes.
+```
+
+---
+
+# TASK 4 — Programmatic Invariants for BCBS239 Auditing
+
+## Goal
+
+Offload financial calculations from the LLM and enforce strict data lineage tagging for banking-standard compliance.
+
+## Required changes
+
+### 1. Update `schemas/agent-action-log.schema.json`
+
+Add required property:
+
+```yaml
+bcbs239_principle_tag: array[string]
+```
+
+Valid values must map to reference files inside:
+
+```txt
+knowledge/references/bcbs239/
+```
+
+Allowed starter values:
+
+```txt
+01-governance-and-infrastructure
+02-risk-data-aggregation
+03-risk-reporting-practices
+04-supervisory-review-remediation
+05-2023-progress-lessons
+06-pfc-skill-guardrail-map
+07-bcbs239-skill-contract-guidance
+```
+
+Required behavior:
+
+```txt
+Every semantic action log event must declare which BCBS239 guardrail family it touches.
+If not applicable, use [] only for non-control debug events. For semantic PFC actions, empty tag is not allowed.
+```
+
+### 2. Update `tools/check_pfc_output_enforcement.py`
+
+Add deterministic financial math invariants.
+
+Minimum invariant:
+
+```txt
+For DL-27-FIN-project-cost-calculator.yaml output arrays, line-item amounts must sum exactly or within declared rounding tolerance to total budget / total forecast defined in the output payload.
+```
+
+If the math fails:
+
+```txt
+- fail the checker
+- emit Finance breaker reason
+- trigger/require enforcement-output-gate.kiro.hook before any graph commit
+- block LLM write-back
+```
+
+Expected checker behavior:
+
+```txt
+PASS: totals match and every amount has derived_from/source_id
+FAIL: total mismatch, missing derived_from, missing source_id, or unsupported budget status
+```
+
+Recommended implementation:
+
+```txt
+- keep existing text-header checks
+- add JSON/YAML payload parser if output file contains fenced yaml/json block
+- detect cost_line_items, forecast_line_items, total_budget, total_forecast
+- compare Decimal totals, not float
+- require derived_from or source_id on every financial line item
+```
+
+---
+
+# Required Files to Update
+
+Update at minimum:
+
+```txt
+steering/16-run-graph-policy.md
+knowledge/runtime/pfc-runtime-execution-engine.md
+schemas/kiro-hook.schema.json
+steering/20-logging-depth-policy.md
+tools/validate_kiro_hooks.py
+steering/11-circuit-breaker-policy.md
+knowledge/support/memory-context-controller.md
+schemas/agent-action-log.schema.json
+tools/check_pfc_output_enforcement.py
 _work/TASKS.md
 _work/RISKS.md
 tests/readiness-scorecard.md
@@ -269,53 +399,56 @@ README.md
 Add checkpoint:
 
 ```txt
-checkpoints/YYYY-MM-DD-kiro-live-validation.md
+checkpoints/YYYY-MM-DD-architecture-hardening.md
 ```
 
 Checkpoint must include:
 
 ```txt
-what was tested
 commands run
-pass/fail result
 files changed
+validation result
 remaining blockers
-new readiness score
+readiness score before/after
+known unverified assumptions
 ```
 
-## Acceptance criteria
+---
 
-MVP-live validation passes if:
+# Acceptance Criteria
 
 ```txt
-[ ] graph validator passes valid fixture
-[ ] graph validator fails invalid fixture as expected
-[ ] all 5 P0 DL contracts pass schema validation
-[ ] bootstrap script creates .pm runtime structure
-[ ] 6 critical UCs have test results
-[ ] UC-22 blocks fake Green/on-budget claim
-[ ] UC-01 does not create M3 baseline without full support
-[ ] UC-07 enforces cascade
-[ ] UC-15 requires derived_from for cost
-[ ] UC-20 blocks official executive report unless M3 + breaker CLOSED
-[ ] checkpoint created
-[ ] readiness score updated
+[ ] Bounded-Convergence-Loop defined with MAX_ITERATIONS = 3
+[ ] State Lock contract defined for graph write-back
+[ ] Hook schema supports execution_tier
+[ ] Hook validator checks blocking vs async hooks
+[ ] Logging policy explains Tier 1 blocking and Tier 2 async hooks
+[ ] Circuit Breaker recovery forbids full trailing conversation history
+[ ] Memory Context Controller defines Isolate-and-Condense
+[ ] Agent action log schema requires bcbs239_principle_tag for semantic events
+[ ] Output checker validates deterministic finance totals using Decimal or equivalent
+[ ] Failed finance invariant blocks write-back and opens/requires output enforcement gate
+[ ] README/TASKS/RISKS/scorecard/checkpoint updated
 ```
 
-Do not mark as team-ready unless all 22 UCs are tested, hook schema is verified, and a real workspace walkthrough exists.
+Do not mark this complete unless deterministic checks are implemented or explicitly documented as pending.
 
-## Final response expected from Kiro
+---
+
+# Final Response Expected from Kiro
 
 Return:
 
 ```md
-# Kiro Handoff Result — PFC Power
+# Kiro Architecture Hardening Result — PFC Power
 
 ## Summary
 ## Commands Run
-## Validation Results
-## UC Test Results
 ## Files Changed
+## Validation Results
+## Hook Schema Status
+## Circuit Breaker / Memory Controller Changes
+## BCBS239 / Finance Invariant Changes
 ## Remaining Blockers
 ## Readiness Score Before / After
 ## Recommendation
@@ -326,6 +459,5 @@ PASS / PARTIAL / FAIL
 ## Short instruction
 
 ```txt
-Finish v0.2 live validation, not new feature expansion.
-Validate graph/contracts, test bootstrap, run 6 critical UCs, update scorecard/tasks/risks, checkpoint everything.
+Implement architecture hardening only. Do not expand features beyond the four tasks. Keep PFC as orchestrator, DL Skills as contracts. Validate deterministic controls before claiming readiness.
 ```

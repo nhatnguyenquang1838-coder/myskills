@@ -1,7 +1,7 @@
 # Planning & Financial Control Power — Readiness Scorecard
 
 Last rescored: 2026-07-04
-Version assessed: v0.1 plus Circuit Breaker and Memory Context Controller support docs
+Version assessed: v0.2 draft after E2E go-live execution batch
 
 ## Scale
 
@@ -18,42 +18,45 @@ Version assessed: v0.1 plus Circuit Breaker and Memory Context Controller suppor
 
 | Component | Target | Previous Score | Rescore | Notes |
 |---|---:|---:|---:|---|
-| Final architecture | 4.5 | 3.5 | 3.7 | Operating model exists; Circuit Breaker and Memory Controller improve control flow; still needs diagram and run-graph policy |
-| Project Control Graph | 5.0 | 3.5 | 3.5 | YAML template exists; unchanged; needs schema validation and run-context graph policy |
-| Skills | 4.5 | 3.5 | 3.8 | Added circuit-breaker and memory-context-controller skills; still needs expected outputs |
-| Intake / onboarding | 5.0 | 3.5 | 3.5 | Policy and template exist; unchanged; needs live flow test |
-| Tools / MCP | 3.5 | 2.0 | 2.0 | Placeholder only; MVP can run without MCP |
-| Hooks | 4.0 | 2.5 | 3.0 | Added circuit-breaker hook; exact Kiro hook schema still needs validation |
-| Knowledge base | 4.0 | 3.0 | 3.5 | Added support docs for Circuit Breaker and Memory Context Controller |
-| Steering | 4.5 | 4.0 | 4.2 | Added steering policies 11 and 12; still needs contradiction review |
-| Patterns | 4.0 | 2.5 | 2.8 | Added support scenario; still needs more cascade patterns |
-| Context / history | 4.5 | 3.0 | 3.8 | Memory Context Controller improves retrieval, staleness, conflict, and bias control |
-| Guardrails | 5.0 | 3.5 | 4.0 | Circuit Breaker improves enforcement; still needs trap tests and automated validation |
-| Checkpoint / versioning | 4.0 | 3.0 | 3.2 | Added checkpoint for Circuit Breaker / Memory Context support |
-| Output templates | 4.5 | 3.5 | 3.6 | Added breaker/context logs; still needs expected report outputs |
-| Circuit Breaker | 4.5 | N/A | 3.8 | Support doc, steering, skill, hook, template, and scenario exist; needs real execution test |
-| Memory Context Controller | 4.5 | N/A | 3.7 | Support doc, steering, skill, memory index, retrieval log, and scenario exist; needs schema/test validation |
+| Final architecture | 4.5 | 3.7 | 3.9 | Runtime, contract boundary, run graph, complex gate now defined |
+| Project Control Graph | 5.0 | 3.5 | 3.9 | Schema and valid/invalid fixtures added; still needs local validation run |
+| Skills | 4.5 | 3.8 | 3.9 | Power-owned support skills exist; P0 external DL contracts added |
+| Intake / onboarding | 5.0 | 3.5 | 3.8 | Workspace bootstrap scripts added; live flow still needs real workspace test |
+| Tools / MCP | 3.5 | 2.0 | 2.2 | Validators added; MCP remains placeholder by design |
+| Hooks | 4.0 | 3.0 | 3.0 | Hook templates exist; exact Kiro hook schema still not verified |
+| Knowledge base | 4.0 | 3.5 | 3.9 | BCBS239 reference pack, UC-00 standard, runtime docs added |
+| Steering | 4.5 | 4.2 | 4.4 | Added run graph policy and complex use-case gate |
+| Patterns | 4.0 | 2.8 | 3.3 | Added UC-00 dry run and expected output patterns |
+| Context / history | 4.5 | 3.8 | 3.8 | No major new memory/history schema in this batch |
+| Guardrails | 5.0 | 4.0 | 4.2 | BCBS239 guardrails, contract breaker, and expected breaker outputs strengthen controls |
+| Checkpoint / versioning | 4.0 | 3.2 | 3.5 | Go-live plan and checkpoints exist; release versioning still manual |
+| Output templates | 4.5 | 3.6 | 3.9 | Run execution record, expected outputs, report breaker format added |
+| Circuit Breaker | 4.5 | 3.8 | 4.0 | State machine + expected breaker outputs exist; still needs executable tests |
+| Memory Context Controller | 4.5 | 3.7 | 3.7 | Stable but not advanced in this batch |
+| Contract Runtime | 4.5 | N/A | 3.8 | DL Skill contract schema, registry, P0 contracts, runtime policy, validators added |
+| Bootstrap / Install | 4.0 | N/A | 3.5 | Linux/macOS and PowerShell bootstrap scripts added; needs clean workspace test |
 
 ## Approximate readiness
 
 Simple average across current scored components:
 
 ```txt
-Approx readiness: 3.47 / 5
-Status: borderline MVP skeleton, not yet stable MVP
+Approx readiness: 3.72 / 5
+Status: MVP-live candidate, pending actual local validation run and hook schema verification
 ```
 
 Practical interpretation:
 
 ```txt
-Architecture/readiness is close to MVP usable.
-It should not yet be treated as production/team-ready.
+The Power has crossed the MVP readiness target on design/assets.
+It should still be treated as live-candidate, not production/team-ready, until validators are run in a real workspace and Kiro hooks are verified.
 ```
 
 ## Release gates
 
 ```txt
 MVP usable:       >= 3.5 / 5
+MVP live target:  >= 3.7 / 5
 Team usable:      >= 4.0 / 5
 Distributable:    >= 4.5 / 5
 ```
@@ -61,39 +64,29 @@ Distributable:    >= 4.5 / 5
 ## Current decision
 
 ```txt
-Current state: just below MVP gate
-Reason: controls are designed, but graph schema, run-graph policy, hook schema validation, and expected-output tests are still missing.
+Current state: MVP-live candidate
+Reason: core standards, contracts, validators, bootstrap scripts, fixtures, and expected outputs exist.
+Remaining blockers: local validation run, clean workspace bootstrap test, Kiro hook schema verification.
 ```
 
-## Biggest score gains from last update
-
-| Area | Why score increased |
-|---|---|
-| Guardrails | Circuit Breaker adds explicit stop/downgrade logic |
-| Context / history | Memory Context Controller adds retrieval, staleness, conflict, and bias policy |
-| Steering | Added specific policies for breaker and memory control |
-| Skills | Added executable skill contracts for breaker and memory control |
-| Hooks | Added circuit-breaker-check hook template |
-
-## Next target
-
-Raise to >= 3.7 by adding:
+## Completed from last target
 
 ```txt
-run-graph-policy.md
-project-control schema validator
+DONE: run-graph-policy.md
+DONE: project-control schema validator
+DONE: expected outputs for scenario tests
+DONE: install script
+DONE: P0 DL Skill contracts
+DONE: UC-00 baseline dry-run scenario
+```
+
+## Still missing for stronger v0.3
+
+```txt
 memory-index schema validator
-history-index template
-expected outputs for scenario tests
+history-index template and schema
 exact Kiro hook schema verification
-install script
-```
-
-Raise to >= 4.0 by adding:
-
-```txt
-real sample project walkthrough
-automated YAML validation
+real clean-workspace test evidence
 trap tests for hallucination / stale history / unsupported budget claim
 full M0/M1/M2/M3 examples
 scoring-rubric.md linking each score to supporting files and tests

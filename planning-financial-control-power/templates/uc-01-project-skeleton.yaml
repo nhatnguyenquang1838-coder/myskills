@@ -1,0 +1,78 @@
+project:
+  id: PRJ-001
+  name: TBD
+  readiness_mode: M0
+  baseline_status: draft
+  baseline_version: null
+  created_from_use_case: UC-01
+
+work_packages:
+  - id: WP-001
+    name: Define initial project scope
+    status: draft
+    milestone_ids: []
+    resource_allocation_ids: []
+    cost_line_ids: []
+    forecast_ids: []
+    evidence_ids: []
+    assumption_ids: [ASM-001]
+    risk_ids: []
+    decision_ids: []
+
+milestones: []
+
+dependencies: []
+
+resource_allocations: []
+
+rate_cards: []
+
+cost_lines: []
+
+forecasts: []
+
+reports: []
+
+evidence: []
+
+assumptions:
+  - id: ASM-001
+    text: Project scope is not yet confirmed.
+    confidence: low
+    linked_graph_ids: [WP-001]
+    status: active
+
+risks: []
+
+decisions: []
+
+change_requests: []
+
+missing_data:
+  - id: MD-001
+    item: Target timeline
+    required_for: milestone planning
+    impact: Cannot create reliable milestone plan.
+    suggested_owner: PM / business owner
+    blocking_level: limitation
+    status: open
+
+  - id: MD-002
+    item: Resource availability
+    required_for: resource planning
+    impact: Cannot confirm resource feasibility.
+    suggested_owner: PM / resource manager
+    blocking_level: limitation
+    status: open
+
+  - id: MD-003
+    item: Budget or rate card
+    required_for: cost forecast
+    impact: Cannot calculate reliable forecast or budget status.
+    suggested_owner: PM / finance / vendor manager
+    blocking_level: blocker
+    status: open
+
+metadata:
+  source: UC-01 Start New Project With Idea Only
+  rule: This is a draft skeleton, not a controlled baseline.

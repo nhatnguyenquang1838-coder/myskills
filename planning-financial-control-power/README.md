@@ -1,9 +1,9 @@
 # Planning & Financial Control Power
 
 Version: `0.2.0-draft`
-Status: stronger MVP-live candidate
+Status: MVP-live candidate
 
-This Kiro Power coordinates planning, resource allocation, cost calculation, reporting, intake/onboarding, context loading, historical data usage, DL Skill contract routing, workflow enforcement, parallel-safe agent action logging, and anti-hallucination controls.
+This Kiro Power coordinates planning, resource allocation, cost calculation, reporting, intake/onboarding, context loading, historical data usage, DL Skill contract routing, workflow enforcement, native Kiro hooks, parallel-safe agent action logging, and anti-hallucination controls.
 
 ## Core model
 
@@ -29,6 +29,7 @@ PFC Power owns:
 - guardrails
 - circuit breaker
 - enforcement gates
+- native Kiro hook bundle
 - parallel-safe agent action logging
 - checkpoint/audit
 
@@ -44,13 +45,13 @@ DL Skills provide:
 POWER.md
 steering/      operating policies and control rules
 contracts/     external DL Skill contracts
-schemas/       Project Control Graph, contract, and audit schemas
+schemas/       Project Control Graph, contract, audit, and hook schemas
 tools/         validators, output checkers, logging utilities
 scripts/       workspace bootstrap scripts
 skills/        Power-owned support skills
 agents/        role definitions
 templates/     reusable workspace starter files
-hooks/         hook templates until schema is verified
+hooks/         native Kiro v1 hook bundle and legacy hook templates
 knowledge/     reusable PM methods, BCBS239 references, standards, patterns
 tests/         scenarios, fixtures, expected outputs, enforcement matrix
 _work/         plan/tasks/risks/decisions to bring Power live
@@ -92,6 +93,7 @@ The Power is considered MVP live when a user can:
 6. Block unsupported official claims via Circuit Breaker.
 7. Produce run execution records and checkpoints.
 8. Capture per-run semantic action logs for later analysis.
+9. Install native Kiro v1 hooks into `.kiro/hooks/`.
 ```
 
 ## Bootstrap target workspace
@@ -126,7 +128,44 @@ Created runtime structure:
 └── memory/memory-index.yaml
 
 .kiro/
+├── hooks/pfc-workspace-hooks.json
 └── logs/runs/
+```
+
+## Native Kiro hooks
+
+Source hook bundle:
+
+```txt
+hooks/kiro-v1/pfc-workspace-hooks.json
+```
+
+Validate hook schema:
+
+```bash
+python tools/validate_kiro_hooks.py hooks/kiro-v1/pfc-workspace-hooks.json
+```
+
+Installed target after bootstrap:
+
+```txt
+.kiro/hooks/pfc-workspace-hooks.json
+```
+
+Enabled by default:
+
+```txt
+pfc-cascade-check
+pfc-report-fact-check
+```
+
+Disabled by default until narrowed in Kiro IDE pilot:
+
+```txt
+pfc-enforcement-preflight
+pfc-enforcement-contract-gate
+pfc-enforcement-output-gate
+pfc-enforcement-writeback-gate
 ```
 
 ## Production logging model
@@ -227,6 +266,12 @@ python tools/validate_dl_contract.py contracts/dl-skills/DL-27-FIN-project-cost-
 python tools/validate_dl_contract.py contracts/dl-skills/DL-26-RPT-report-builder.yaml
 ```
 
+Validate Kiro hooks:
+
+```bash
+python tools/validate_kiro_hooks.py hooks/kiro-v1/pfc-workspace-hooks.json
+```
+
 ## Current MVP gate
 
 Target readiness:
@@ -238,16 +283,15 @@ Target readiness:
 Current candidate score:
 
 ```txt
-3.91 / 5
+3.99 / 5
 ```
 
 Known limitations:
 
 ```txt
-Hook files are still templates until exact Kiro hook schema is verified.
-Validators still need to be run in a clean local checkout.
-Bootstrap still needs real target workspace evidence.
-Logging smoke test still needs to be run in a clean workspace.
+Full graph/contract validators still need to be run in a true clean local checkout.
+Kiro IDE runtime behavior for enabled hooks still needs pilot observation.
+Memory-index and history-index schema validators are still missing.
 ```
 
 ## Work control

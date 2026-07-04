@@ -1,7 +1,7 @@
 # Planning & Financial Control Power — Readiness Scorecard
 
 Last rescored: 2026-07-04
-Version assessed: v0.2 draft after workflow enforcement layer
+Version assessed: v0.2 draft after Kiro hook schema verification, bootstrap smoke, and logging smoke
 
 ## Scale
 
@@ -18,39 +18,39 @@ Version assessed: v0.2 draft after workflow enforcement layer
 
 | Component | Target | Previous Score | Rescore | Notes |
 |---|---:|---:|---:|---|
-| Final architecture | 4.5 | 3.9 | 4.0 | Enforcement ladder now makes runtime controls explicit |
-| Project Control Graph | 5.0 | 3.9 | 3.9 | Schema/fixtures exist; still needs local validation run |
-| Skills | 4.5 | 3.9 | 3.9 | Unchanged; P0 contracts exist |
-| Intake / onboarding | 5.0 | 3.8 | 3.8 | Unchanged; bootstrap still needs real workspace test |
-| Tools / MCP | 3.5 | 2.2 | 2.5 | Added output enforcement checker; MCP still placeholder |
-| Hooks | 4.0 | 3.0 | 3.2 | Added enforcement hook templates, but schema still unverified |
-| Knowledge base | 4.0 | 3.9 | 4.0 | Added workflow gap review and enforcement logic |
-| Steering | 4.5 | 4.4 | 4.5 | Added workflow enforcement policy |
-| Patterns | 4.0 | 3.3 | 3.6 | Added 22-UC enforcement matrix |
-| Context / history | 4.5 | 3.8 | 3.9 | Context/memory gate is now mandatory for relevant UCs |
-| Guardrails | 5.0 | 4.2 | 4.5 | Guardrails now mapped to enforcement gates and UCs |
-| Checkpoint / versioning | 4.0 | 3.5 | 3.6 | Checkpoint added; release versioning still manual |
-| Output templates | 4.5 | 3.9 | 4.1 | Added UC enforcement checklist and enforcement result template |
-| Circuit Breaker | 4.5 | 4.0 | 4.2 | Breakers now tied to workflow gates |
-| Memory Context Controller | 4.5 | 3.7 | 3.8 | Mandatory gate added; schema still missing |
-| Contract Runtime | 4.5 | 3.8 | 4.0 | Contract gate and output gate now explicit |
-| Bootstrap / Install | 4.0 | 3.5 | 3.5 | Unchanged; clean workspace test still needed |
-| Enforcement Layer | 4.5 | N/A | 4.0 | Enforcement policy, UC matrix, hooks, checklist, checker added |
+| Final architecture | 4.5 | 4.0 | 4.0 | Architecture unchanged; runtime controls remain explicit |
+| Project Control Graph | 5.0 | 3.9 | 3.9 | Schema/fixtures exist; full clean-checkout validation still open |
+| Skills | 4.5 | 3.9 | 3.9 | P0 contracts exist; full clean-checkout contract validation still open |
+| Intake / onboarding | 5.0 | 3.8 | 3.9 | Bootstrap smoke created `.pm/` and `.kiro/` runtime structure |
+| Tools / MCP | 3.5 | 2.5 | 2.8 | Added Kiro hook validator; MCP still placeholder |
+| Hooks | 4.0 | 3.2 | 3.8 | Kiro v1 schema verified; native hook bundle added and locally validated; IDE runtime still needs pilot verification |
+| Knowledge base | 4.0 | 4.0 | 4.0 | Unchanged |
+| Steering | 4.5 | 4.5 | 4.5 | Unchanged |
+| Patterns | 4.0 | 3.6 | 3.6 | Unchanged |
+| Context / history | 4.5 | 3.9 | 3.9 | Unchanged; memory-index validator still missing |
+| Guardrails | 5.0 | 4.5 | 4.5 | Unchanged |
+| Checkpoint / versioning | 4.0 | 3.6 | 3.7 | Added checkpoint for hook/bootstrap/logging smoke |
+| Output templates | 4.5 | 4.1 | 4.1 | Unchanged |
+| Circuit Breaker | 4.5 | 4.2 | 4.2 | Unchanged |
+| Memory Context Controller | 4.5 | 3.8 | 3.8 | Schema still missing |
+| Contract Runtime | 4.5 | 4.0 | 4.0 | Unchanged; validator run evidence still open |
+| Bootstrap / Install | 4.0 | 3.5 | 3.9 | Linux bootstrap smoke passed and installs native Kiro hook JSON |
+| Enforcement Layer | 4.5 | 4.0 | 4.0 | Enforcement hooks now available as Kiro v1 JSON; optional broad hooks disabled by default |
 
 ## Approximate readiness
 
 Simple average across current scored components:
 
 ```txt
-Approx readiness: 3.91 / 5
-Status: stronger MVP-live candidate; close to team-pilot threshold, but still blocked by local validation and hook verification
+Approx readiness: 3.99 / 5
+Status: MVP-live candidate; one clean-checkout validation blocker remains before team pilot
 ```
 
 Practical interpretation:
 
 ```txt
-The Power now has enforceable workflow logic on paper and lightweight static output checks.
-It is still not team-ready until validators run locally, bootstrap is tested in a real workspace, and Kiro hook schema is verified.
+The Power now has native Kiro v1 hook assets, a hook validator, bootstrap hook installation, and logging smoke evidence.
+It is still not team-ready until graph/contract validators are run from a real clean checkout and Kiro IDE hook runtime behavior is observed during pilot use.
 ```
 
 ## Release gates
@@ -65,32 +65,32 @@ Distributable:    >= 4.5 / 5
 ## Current decision
 
 ```txt
-Current state: stronger MVP-live candidate
-Reason: enforcement gates, UC enforcement matrix, guardrail/checklist templates, hook templates, and output enforcement checker exist.
-Remaining blockers: local validation run, clean workspace bootstrap test, Kiro hook schema verification.
+Current state: MVP-live candidate
+Reason: schema-verified Kiro hook bundle exists, bootstrap installs hooks, logging smoke test passed, and checkpoint evidence was created.
+Remaining blocker: full graph/contract validator run in clean local checkout.
 ```
 
 ## Completed from last target
 
 ```txt
-DONE: workflow enforcement gap review
-DONE: workflow enforcement policy
-DONE: 22-UC enforcement matrix
-DONE: UC enforcement checklist
-DONE: UC enforcement test result template
-DONE: enforcement hook templates
-DONE: output enforcement checker
+DONE: Kiro hook schema verification
+DONE: Kiro v1 hook JSON schema
+DONE: native Kiro v1 hook bundle
+DONE: Kiro hook validator
+DONE: bootstrap installs .kiro/hooks/pfc-workspace-hooks.json
+DONE: bootstrap smoke in target workspace
+DONE: logging smoke in clean target workspace
+DONE: checkpoint update
 ```
 
 ## Still missing for v0.3 team pilot
 
 ```txt
-local validation run evidence
-clean-workspace bootstrap evidence
-exact Kiro hook schema verification
+clean-checkout graph/contract validation transcript
 memory-index schema validator
 history-index template and schema
 trap tests for hallucination / stale history / unsupported budget claim
 full M0/M1/M2/M3 examples
 scoring-rubric.md linking each score to supporting files and tests
+Kiro IDE runtime observation for enabled hooks
 ```

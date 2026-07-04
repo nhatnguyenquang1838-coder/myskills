@@ -1,0 +1,15 @@
+{
+  "name": "pfc-enforcement-output-gate",
+  "description": "Run E5-E8 enforcement gates after skill output and before publishing any result.",
+  "scope": "workspace",
+  "trigger": {
+    "event": "manual",
+    "command": "pfc-enforcement-output-gate"
+  },
+  "action": {
+    "type": "agent_prompt",
+    "agent": "pm-fact-checker",
+    "prompt": "Run PFC output enforcement. Check E5 Skill output gate, E6 Cascade gate, E7 Finance basis gate, and E8 Report/claim gate. Validate required outputs, allowed graph deltas, forbidden claims, evidence/source support, finance basis, cascade completion, and required output header. Return allowed output, blocked claims, breaker state, and required recovery."
+  },
+  "status": "template_only_until_kiro_hook_schema_verified"
+}

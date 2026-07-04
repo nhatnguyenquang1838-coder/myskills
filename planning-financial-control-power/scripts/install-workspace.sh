@@ -3,6 +3,7 @@ set -euo pipefail
 
 TARGET_DIR="${1:-.}"
 PM_DIR="$TARGET_DIR/.pm"
+KIRO_LOG_DIR="$TARGET_DIR/.kiro/logs"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 POWER_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
@@ -13,7 +14,8 @@ mkdir -p \
   "$PM_DIR/reports" \
   "$PM_DIR/history" \
   "$PM_DIR/checkpoints" \
-  "$PM_DIR/memory"
+  "$PM_DIR/memory" \
+  "$KIRO_LOG_DIR"
 
 copy_if_missing() {
   local src="$1"
@@ -33,6 +35,10 @@ copy_if_missing "$POWER_DIR/templates/missing-data-log.md" "$PM_DIR/audit/missin
 copy_if_missing "$POWER_DIR/templates/circuit-breaker-log.md" "$PM_DIR/audit/circuit-breaker-log.md"
 copy_if_missing "$POWER_DIR/templates/context-retrieval-log.md" "$PM_DIR/audit/context-retrieval-log.md"
 copy_if_missing "$POWER_DIR/templates/run-execution-record.md" "$PM_DIR/audit/run-execution-record.md"
+copy_if_missing "$POWER_DIR/templates/agent-action-log.ndjson" "$PM_DIR/audit/agent-action-log.ndjson"
+copy_if_missing "$POWER_DIR/templates/ide-event-log.ndjson" "$PM_DIR/audit/ide-event-log.ndjson"
+copy_if_missing "$POWER_DIR/templates/turn-analysis-log.md" "$PM_DIR/audit/turn-analysis-log.md"
 copy_if_missing "$POWER_DIR/templates/memory-index.yaml" "$PM_DIR/memory/memory-index.yaml"
 
 echo "PFC workspace bootstrap complete: $PM_DIR"
+echo "Kiro debug log directory ready: $KIRO_LOG_DIR"

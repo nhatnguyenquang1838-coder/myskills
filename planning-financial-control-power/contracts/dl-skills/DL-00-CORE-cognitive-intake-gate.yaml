@@ -1,0 +1,148 @@
+contract_version: "0.1"
+skill_id: "DL-00-CORE-cognitive-intake-gate"
+skill_name: "Cognitive Intake Gate"
+category: "CORE"
+maturity: "detailed"
+owner: "external-dl-skill-base"
+status: "active"
+
+purpose:
+  summary: "Classify user request, identify intent, collect minimum critical data, and produce missing-data/assumption candidates."
+  guarantees:
+    - "returns intent classification"
+    - "returns readiness input gaps"
+    - "returns maximum critical questions"
+  non_goals:
+    - "does not approve baseline"
+    - "does not calculate forecast"
+    - "does not publish official report"
+
+input_contract:
+  required_inputs:
+    - "user_request"
+  optional_inputs:
+    - "existing_project_control_graph"
+    - "available_materials"
+    - "user_context"
+  accepted_graph_nodes:
+    - "project"
+    - "missing_data"
+    - "assumptions"
+  accepted_files:
+    - "markdown"
+    - "yaml"
+    - "pdf-summary"
+    - "spreadsheet-summary"
+  accepted_context_types:
+    - "current_request"
+    - "workspace_state"
+  forbidden_inputs:
+    - "unsupported official status claim"
+
+output_contract:
+  required_outputs:
+    - "intent"
+    - "minimum_required_data"
+    - "missing_data_candidates"
+    - "assumption_candidates"
+    - "readiness_signal"
+  optional_outputs:
+    - "critical_questions"
+    - "suggested_run_type"
+  output_format: "yaml"
+  produced_graph_deltas:
+    - "project"
+    - "missing_data"
+    - "assumptions"
+  produced_artifacts: []
+  confidence_required: true
+
+preconditions:
+  readiness_modes_allowed:
+    - "M0"
+    - "M1"
+    - "M2"
+    - "M3"
+  required_graph_nodes: []
+  required_evidence: []
+  required_decisions: []
+  required_assumptions_allowed: []
+
+postconditions:
+  guaranteed_outputs:
+    - "request is classified or marked unsupported"
+    - "missing critical data is explicit"
+  validation_checks:
+    - "intent exists"
+    - "missing data list exists even if empty"
+  graph_delta_rules:
+    - "may propose project skeleton only in draft_delta"
+
+side_effects:
+  writes_files: false
+  writes_graph: false
+  creates_artifacts: false
+  mutates_external_system: false
+  notes: "Returns classification and draft deltas only."
+
+constraints:
+  must_not_claim:
+    - "project is approved"
+    - "budget is sufficient"
+    - "baseline is controlled"
+    - "official RAG status"
+  must_not_write:
+    - "baseline_version"
+    - "approved budget"
+  max_scope: "intake and classification"
+  authority_limit: "draft intake only"
+
+failure_modes:
+  missing_input: "return unsupported request and ask for project/request description"
+  ambiguous_input: "ask max 5 critical questions or mark unknown"
+  unsupported_request: "return unsupported capability"
+  low_confidence: "downgrade to M0"
+
+control_requirements:
+  required_guardrails:
+    - "ask max 5 critical questions"
+    - "accept unknown"
+    - "do not invent missing data"
+  required_circuit_breakers:
+    - "Baseline breaker"
+    - "Evidence breaker"
+  required_bias_checks:
+    - "do not infer from old projects"
+  required_hallucination_checks:
+    - "unknown becomes missing_data"
+    - "assumption is labelled"
+  required_hooks_before: []
+  required_hooks_after:
+    - "intake-completeness-check"
+
+evidence_rule:
+  accepted_sources:
+    - "user_request"
+    - "uploaded_material"
+    - "existing_graph"
+  source_required_for_claims: true
+  assumptions_allowed: true
+  historical_data_allowed_as: "benchmark_only"
+
+pfc_integration:
+  supported_use_cases:
+    - "UC-00"
+    - "UC-01"
+    - "UC-02"
+    - "UC-04"
+  primary_agent_role: "pm-controller"
+  graph_nodes_read:
+    - "project"
+    - "missing_data"
+    - "assumptions"
+  graph_nodes_written_as_delta:
+    - "project"
+    - "missing_data"
+    - "assumptions"
+  write_back_authority: "draft_delta"
+  result_validator: "pfc-result-validator"

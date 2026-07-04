@@ -6,6 +6,7 @@ Rules:
 - Use stderr and per-run local files for debug logs.
 - Use .pm/audit/runs/{run_id}.agent-action.ndjson for semantic PFC audit events.
 - Shared aggregate logs are optional convenience only; per-run files are source of truth.
+- Semantic action logs must include BCBS239 principle tags.
 """
 
 from __future__ import annotations
@@ -22,6 +23,16 @@ from pathlib import Path
 from typing import Any
 
 RUN_ID_PATTERN = re.compile(r"[^A-Za-z0-9_.-]+")
+DEFAULT_BCBS239_TAGS = ["06-pfc-skill-guardrail-map"]
+VALID_BCBS239_TAGS = {
+    "01-governance-and-infrastructure",
+    "02-risk-data-aggregation",
+    "03-risk-reporting-practices",
+    "04-supervisory-review-remediation",
+    "05-2023-progress-lessons",
+    "06-pfc-skill-guardrail-map",
+    "07-bcbs239-skill-contract-guidance",
+}
 
 
 def utc_now() -> str:
@@ -47,6 +58,26 @@ def get_run_id(explicit_run_id: str | None = None) -> str:
 
 def short_run_id(run_id: str) -> str:
     return sanitize_run_id(run_id)[-8:]
+
+
+def normalize_bcbs239_tags(tags: Any) -> list[str]:
+    """Return valid BCBS239 tags, defaulting to the PFC guardrail map.
+
+    Runtime logging must not fail silently just because a caller omitted the tag.
+    The default tag keeps the event schema-compliant while signaling that the event
+    is governed by PFC guardrails. Callers should pass more specific tags when known.
+    """
+    if tags is None:
+        return DEFAULT_BCBS239_TAGS.copy()
+    if isinstance(tags, str):
+        candidate = [tags]
+    elif isinstance(tags, list):
+        candidate = [str(item) for item in tags]
+    else:
+        candidate = DEFAULT_BCBS239_TAGS.copy()
+
+    valid = [tag for tag in candidate if tag in VALID_BCBS239_TAGS]
+    return valid or DEFAULT_BCBS239_TAGS.copy()
 
 
 def run_debug_log_path(run_id: str, root: str | Path = ".") -> Path:
@@ -149,6 +180,7 @@ def append_agent_action_log(event: dict[str, Any], root: str | Path = ".", run_i
     resolved_run_id = get_run_id(run_id or event.get("run_id"))
     event.setdefault("run_id", resolved_run_id)
     event.setdefault("log_level", "semantic_action")
+    event["bcbs239_principle_tag"] = normalize_bcbs239_tags(event.get("bcbs239_principle_tag"))
     append_ndjson(agent_action_log_path(resolved_run_id, root), event)
     return resolved_run_id
 
@@ -200,6 +232,7 @@ if __name__ == "__main__":
         "agent": "kiro_power_agent",
         "action_type": "OUTPUT_GENERATED",
         "status": "PASS",
+        "bcbs239_principle_tag": ["06-pfc-skill-guardrail-map"],
         "summary": "Smoke event written by kiro_safe_logging.py",
     })
     append_ide_event_log({

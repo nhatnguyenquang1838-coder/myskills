@@ -54,7 +54,7 @@ P2 = useful after live
 
 | ID | Task | Owner | Status | Output |
 |---|---|---|---|---|
-| P1-01 | Verify exact Kiro hook schema | PFC | TODO | corrected hook templates |
+| P1-01 | Verify exact Kiro hook schema | PFC | DONE | `schemas/kiro-hook.schema.json` + native Kiro v1 shape |
 | P1-02 | Add memory-index schema validator | PFC | TODO | `schemas/memory-index.schema.json` + tool |
 | P1-03 | Add history-index template and validator | PFC | TODO | `templates/history-index.yaml` + schema |
 | P1-04 | Add baseline completeness checklist template | PFC | TODO | `templates/baseline-completeness-check.md` |
@@ -64,8 +64,9 @@ P2 = useful after live
 | P1-08 | Add dry run for history-as-truth blocker | PFC | TODO | scenario + expected output |
 | P1-09 | Add one real sample project walkthrough | PFC | TODO | `examples/sample-project-walkthrough/` |
 | P1-10 | Create v0.3 team pilot checklist | PFC | TODO | `_work/milestones/v0.3-team-pilot.md` |
-| P1-11 | Run logging smoke test in clean workspace | PFC/Kiro | TODO | evidence that `.kiro/logs/runs/{run_id}.log` and `.pm/audit/runs/{run_id}.agent-action.ndjson` are written |
-| P1-12 | Convert hook templates to verified native Kiro v1 schema | PFC/Kiro | TODO | native hooks for logging/enforcement |
+| P1-11 | Run logging smoke test in clean workspace | PFC | DONE | `.kiro/logs/runs/RUN-SMOKE.log` + `.pm/audit/runs/RUN-SMOKE.*` smoke evidence |
+| P1-12 | Convert hook templates to verified native Kiro v1 schema | PFC | DONE | `hooks/kiro-v1/pfc-workspace-hooks.json` installed to `.kiro/hooks/` |
+| P1-13 | Run full graph/contract validators in clean checkout | PFC/Kiro | TODO | local checkout validation transcript |
 
 ## P2 — After live
 
@@ -92,6 +93,10 @@ DONE: P0-21 enforcement layer
 DONE: P0-22..26 production logging layer
 DONE: P0-27 parallel-safe logging
 DONE: P0-28 redundant logging cleanup
+DONE: P1-01 Kiro hook schema verified
+DONE: P1-11 logging smoke test
+DONE: P1-12 native Kiro v1 hook bundle
+TODO: P1-13 run full graph/contract validators in clean checkout
 ```
 
 ## MVP live blocker list
@@ -102,10 +107,10 @@ RESOLVED: BLOCKER-02 no executable validation script
 RESOLVED: BLOCKER-03 top DL Skill contracts are still registry-level only
 RESOLVED: BLOCKER-04 install/bootstrap not created
 RESOLVED: BLOCKER-05 expected outputs not created
+RESOLVED: BLOCKER-06 hooks not schema-verified
+RESOLVED: BLOCKER-08 bootstrap not yet tested in a target workspace
 RESOLVED: BLOCKER-09 production-safe logging model missing
+RESOLVED: BLOCKER-10 logging smoke test not yet run in clean workspace
 RESOLVED: BLOCKER-11 parallel logging safety missing
-OPEN:     BLOCKER-06 hooks not schema-verified
 OPEN:     BLOCKER-07 validators not yet run in a clean local checkout
-OPEN:     BLOCKER-08 bootstrap not yet tested in a real target workspace
-OPEN:     BLOCKER-10 logging smoke test not yet run in clean workspace
 ```

@@ -45,8 +45,10 @@ P2 = useful after live
 | P0-22 | Add agent action logging policy/schema | PFC | DONE | `steering/19-agent-action-logging-policy.md`, `schemas/agent-action-log.schema.json` |
 | P0-23 | Add logging depth policy | PFC | DONE | `steering/20-logging-depth-policy.md` |
 | P0-24 | Add Kiro-safe Python logging utility | PFC | DONE | `tools/kiro_safe_logging.py` |
-| P0-25 | Bootstrap audit/runtime logging files | PFC | DONE | `agent-action-log.ndjson`, `ide-event-log.ndjson`, `turn-analysis-log.md` |
+| P0-25 | Bootstrap audit/runtime logging directories | PFC | DONE | `.pm/audit/runs/`, `.kiro/logs/runs/` |
 | P0-26 | Add runtime log gitignore rules | PFC | DONE | `.gitignore` |
+| P0-27 | Make logging parallel-safe | PFC | DONE | per-run debug/audit/IDE/turn analysis files |
+| P0-28 | Clean redundant shared logging templates | PFC | PARTIAL | YAML/shared action templates removed; shared IDE example template retained because connector blocked deletion |
 
 ## P1 — Required for team pilot
 
@@ -62,7 +64,7 @@ P2 = useful after live
 | P1-08 | Add dry run for history-as-truth blocker | PFC | TODO | scenario + expected output |
 | P1-09 | Add one real sample project walkthrough | PFC | TODO | `examples/sample-project-walkthrough/` |
 | P1-10 | Create v0.3 team pilot checklist | PFC | TODO | `_work/milestones/v0.3-team-pilot.md` |
-| P1-11 | Run logging smoke test in clean workspace | PFC/Kiro | TODO | evidence that `.kiro/logs/power_steps.log` and `.pm/audit/agent-action-log.ndjson` are written |
+| P1-11 | Run logging smoke test in clean workspace | PFC/Kiro | TODO | evidence that `.kiro/logs/runs/{run_id}.log` and `.pm/audit/runs/{run_id}.agent-action.ndjson` are written |
 | P1-12 | Convert hook templates to verified native Kiro v1 schema | PFC/Kiro | TODO | native hooks for logging/enforcement |
 
 ## P2 — After live
@@ -88,6 +90,8 @@ DONE: P0-19 rescore
 DONE: P0-20 live README
 DONE: P0-21 enforcement layer
 DONE: P0-22..26 production logging layer
+DONE: P0-27 parallel-safe logging
+PARTIAL: P0-28 redundant logging cleanup
 ```
 
 ## MVP live blocker list
@@ -99,6 +103,7 @@ RESOLVED: BLOCKER-03 top DL Skill contracts are still registry-level only
 RESOLVED: BLOCKER-04 install/bootstrap not created
 RESOLVED: BLOCKER-05 expected outputs not created
 RESOLVED: BLOCKER-09 production-safe logging model missing
+RESOLVED: BLOCKER-11 parallel logging safety missing
 OPEN:     BLOCKER-06 hooks not schema-verified
 OPEN:     BLOCKER-07 validators not yet run in a clean local checkout
 OPEN:     BLOCKER-08 bootstrap not yet tested in a real target workspace

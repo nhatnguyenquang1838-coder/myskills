@@ -1,0 +1,11 @@
+project:
+  id: PRJ-INVALID
+  name: Invalid Project
+  readiness_mode: M3
+  baseline_status: controlled
+
+cost_lines:
+  - id: COST-INVALID
+    amount: "five thousand"
+    currency: USD
+    derived_from: []

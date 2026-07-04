@@ -12,6 +12,7 @@ $Dirs = @(
   "control",
   "intake",
   "audit",
+  "audit\runs",
   "reports",
   "history",
   "checkpoints",
@@ -22,7 +23,7 @@ foreach ($d in $Dirs) {
   New-Item -ItemType Directory -Force -Path (Join-Path $PmDir $d) | Out-Null
 }
 
-New-Item -ItemType Directory -Force -Path $KiroLogDir | Out-Null
+New-Item -ItemType Directory -Force -Path (Join-Path $KiroLogDir "runs") | Out-Null
 
 function Copy-IfMissing($src, $dst) {
   if (-not (Test-Path $dst)) {
@@ -40,10 +41,8 @@ Copy-IfMissing (Join-Path $PowerDir "templates/missing-data-log.md") (Join-Path 
 Copy-IfMissing (Join-Path $PowerDir "templates/circuit-breaker-log.md") (Join-Path $PmDir "audit/circuit-breaker-log.md")
 Copy-IfMissing (Join-Path $PowerDir "templates/context-retrieval-log.md") (Join-Path $PmDir "audit/context-retrieval-log.md")
 Copy-IfMissing (Join-Path $PowerDir "templates/run-execution-record.md") (Join-Path $PmDir "audit/run-execution-record.md")
-Copy-IfMissing (Join-Path $PowerDir "templates/agent-action-log.ndjson") (Join-Path $PmDir "audit/agent-action-log.ndjson")
-Copy-IfMissing (Join-Path $PowerDir "templates/ide-event-log.ndjson") (Join-Path $PmDir "audit/ide-event-log.ndjson")
-Copy-IfMissing (Join-Path $PowerDir "templates/turn-analysis-log.md") (Join-Path $PmDir "audit/turn-analysis-log.md")
 Copy-IfMissing (Join-Path $PowerDir "templates/memory-index.yaml") (Join-Path $PmDir "memory/memory-index.yaml")
 
 Write-Host "PFC workspace bootstrap complete: $PmDir"
-Write-Host "Kiro debug log directory ready: $KiroLogDir"
+Write-Host "Parallel-safe PFC audit run directory ready: $(Join-Path $PmDir 'audit\runs')"
+Write-Host "Parallel-safe Kiro debug run directory ready: $(Join-Path $KiroLogDir 'runs')"

@@ -1,0 +1,167 @@
+contract_version: "0.1"
+skill_id: "DL-27-FIN-project-cost-calculator"
+skill_name: "Project Cost Calculator"
+category: "FIN"
+maturity: "detailed"
+owner: "external-dl-skill-base"
+status: "active"
+
+purpose:
+  summary: "Calculate project cost lines, forecast, and variance from resource allocation, rate card, duration, and budget inputs."
+  guarantees:
+    - "returns cost lines with derived_from links"
+    - "returns forecast amount when basis exists"
+    - "returns missing finance data when basis is incomplete"
+  non_goals:
+    - "does not approve budget"
+    - "does not set overall project status alone"
+    - "does not infer rates without assumptions"
+
+input_contract:
+  required_inputs:
+    - "resource_allocations"
+    - "rate_cards_or_rate_assumptions"
+    - "duration"
+  optional_inputs:
+    - "approved_budget"
+    - "contingency_rule"
+    - "cost_assumptions"
+  accepted_graph_nodes:
+    - "resource_allocations"
+    - "rate_cards"
+    - "cost_lines"
+    - "forecasts"
+    - "assumptions"
+    - "evidence"
+    - "missing_data"
+  accepted_files:
+    - "rate-card-summary"
+    - "budget-summary"
+    - "resource-plan-summary"
+  accepted_context_types:
+    - "run_context_graph"
+  forbidden_inputs:
+    - "unsupported approved budget claim"
+
+output_contract:
+  required_outputs:
+    - "cost_lines"
+    - "forecast_amount_or_missing_data"
+    - "calculation_basis"
+  optional_outputs:
+    - "budget_variance"
+    - "finance_assumptions"
+    - "budget_status_signal"
+  output_format: "yaml"
+  produced_graph_deltas:
+    - "cost_lines"
+    - "forecasts"
+    - "assumptions"
+    - "missing_data"
+  produced_artifacts: []
+  confidence_required: true
+
+preconditions:
+  readiness_modes_allowed:
+    - "M1"
+    - "M2"
+    - "M3"
+  required_graph_nodes:
+    - "resource_allocations"
+  required_evidence: []
+  required_decisions: []
+  required_assumptions_allowed:
+    - "rate_card"
+    - "duration"
+    - "budget"
+
+postconditions:
+  guaranteed_outputs:
+    - "every amount has derived_from or missing-data explanation"
+  validation_checks:
+    - "cost amount has formula or derived_from"
+    - "budget status only exists if approved budget and threshold exist"
+  graph_delta_rules:
+    - "may propose cost_lines, forecasts, assumptions, missing_data deltas"
+
+side_effects:
+  writes_files: false
+  writes_graph: false
+  creates_artifacts: false
+  mutates_external_system: false
+  notes: "Returns finance draft deltas only."
+
+constraints:
+  must_not_claim:
+    - "budget is green without approved budget and threshold"
+    - "forecast is approved"
+    - "project is on budget without approved budget"
+    - "overall project is green"
+  must_not_write:
+    - "baseline_version"
+    - "official report"
+  max_scope: "cost, forecast, variance calculation"
+  authority_limit: "draft finance deltas"
+
+failure_modes:
+  missing_input: "return missing finance data list"
+  ambiguous_input: "return scenario range or assumption-based estimate"
+  unsupported_request: "return unsupported capability"
+  low_confidence: "downgrade to cost assumption"
+
+control_requirements:
+  required_guardrails:
+    - "every amount must have derived_from or source_id"
+    - "budget RAG requires approved budget and threshold"
+  required_circuit_breakers:
+    - "Finance breaker"
+    - "Evidence breaker"
+    - "Baseline breaker"
+  required_bias_checks:
+    - "do not hide contingency"
+    - "do not select only favorable variance"
+  required_hallucination_checks:
+    - "no unsupported amount"
+    - "no official budget status without basis"
+  required_hooks_before: []
+  required_hooks_after:
+    - "report-fact-check"
+    - "circuit-breaker-check"
+
+evidence_rule:
+  accepted_sources:
+    - "project_control_graph"
+    - "rate card"
+    - "approved budget"
+    - "vendor contract"
+    - "resource allocation"
+    - "user assumption"
+  source_required_for_claims: true
+  assumptions_allowed: true
+  historical_data_allowed_as: "benchmark_only"
+
+pfc_integration:
+  supported_use_cases:
+    - "UC-00"
+    - "UC-13"
+    - "UC-14"
+    - "UC-15"
+    - "UC-16"
+    - "UC-17"
+    - "UC-22"
+    - "UC-23"
+  primary_agent_role: "finance-analyst"
+  graph_nodes_read:
+    - "resource_allocations"
+    - "rate_cards"
+    - "cost_lines"
+    - "forecasts"
+    - "assumptions"
+    - "evidence"
+  graph_nodes_written_as_delta:
+    - "cost_lines"
+    - "forecasts"
+    - "assumptions"
+    - "missing_data"
+  write_back_authority: "approved_delta_only"
+  result_validator: "pfc-result-validator"

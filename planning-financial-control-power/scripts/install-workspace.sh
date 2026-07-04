@@ -10,12 +10,12 @@ POWER_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 mkdir -p \
   "$PM_DIR/control" \
   "$PM_DIR/intake" \
-  "$PM_DIR/audit" \
+  "$PM_DIR/audit/runs" \
   "$PM_DIR/reports" \
   "$PM_DIR/history" \
   "$PM_DIR/checkpoints" \
   "$PM_DIR/memory" \
-  "$KIRO_LOG_DIR"
+  "$KIRO_LOG_DIR/runs"
 
 copy_if_missing() {
   local src="$1"
@@ -35,10 +35,8 @@ copy_if_missing "$POWER_DIR/templates/missing-data-log.md" "$PM_DIR/audit/missin
 copy_if_missing "$POWER_DIR/templates/circuit-breaker-log.md" "$PM_DIR/audit/circuit-breaker-log.md"
 copy_if_missing "$POWER_DIR/templates/context-retrieval-log.md" "$PM_DIR/audit/context-retrieval-log.md"
 copy_if_missing "$POWER_DIR/templates/run-execution-record.md" "$PM_DIR/audit/run-execution-record.md"
-copy_if_missing "$POWER_DIR/templates/agent-action-log.ndjson" "$PM_DIR/audit/agent-action-log.ndjson"
-copy_if_missing "$POWER_DIR/templates/ide-event-log.ndjson" "$PM_DIR/audit/ide-event-log.ndjson"
-copy_if_missing "$POWER_DIR/templates/turn-analysis-log.md" "$PM_DIR/audit/turn-analysis-log.md"
 copy_if_missing "$POWER_DIR/templates/memory-index.yaml" "$PM_DIR/memory/memory-index.yaml"
 
 echo "PFC workspace bootstrap complete: $PM_DIR"
-echo "Kiro debug log directory ready: $KIRO_LOG_DIR"
+echo "Parallel-safe PFC audit run directory ready: $PM_DIR/audit/runs"
+echo "Parallel-safe Kiro debug run directory ready: $KIRO_LOG_DIR/runs"

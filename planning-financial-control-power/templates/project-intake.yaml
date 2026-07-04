@@ -1,0 +1,43 @@
+project:
+  name: ""
+  owner: ""
+  reporting_audience: ""
+  current_phase: ""
+
+scope:
+  objective: ""
+  in_scope: []
+  out_of_scope: []
+  work_packages: []
+
+timeline:
+  target_date: ""
+  known_milestones: []
+  fixed_deadlines: []
+  dependencies: []
+
+resource:
+  teams: []
+  roles_needed: []
+  available_capacity: []
+  constraints: []
+
+finance:
+  approved_budget: null
+  currency: ""
+  rate_card_available: false
+  rate_assumptions: []
+  vendor_costs: []
+  internal_costs: []
+  contingency_rule: ""
+
+evidence:
+  source_files: []
+  links: []
+  meeting_notes: []
+  decisions: []
+  assumptions: []
+
+quality:
+  confidence_target: rough
+  allowed_output: draft

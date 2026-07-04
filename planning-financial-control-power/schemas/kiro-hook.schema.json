@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.local/pfc/kiro-hook.schema.json",
-  "title": "Kiro v1 Hook File",
+  "title": "Kiro v1 Hook File with PFC Execution Tier",
   "type": "object",
   "additionalProperties": false,
   "required": ["version", "hooks"],
@@ -17,10 +17,15 @@
     "hook": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "trigger", "action"],
+      "required": ["name", "trigger", "execution_tier", "action"],
       "properties": {
         "name": {"type": "string", "minLength": 1},
         "description": {"type": "string"},
+        "execution_tier": {
+          "type": "string",
+          "enum": ["blocking", "async"],
+          "description": "PFC execution tier. blocking hooks run on the critical path; async hooks are scheduled in background and must not block the next semantic turn."
+        },
         "trigger": {
           "type": "string",
           "enum": [

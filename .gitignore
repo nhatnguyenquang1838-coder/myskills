@@ -1,0 +1,19 @@
+# Local Kiro runtime logs
+.kiro/logs/
+
+# PFC runtime logs in target workspaces
+.pm/audit/*-log.ndjson
+.pm/audit/*.runtime.md
+.pm/audit/terminal-*.log
+.pm/audit/git-status-log.ndjson
+.pm/audit/file-change-log.ndjson
+.pm/audit/ide-event-log.ndjson
+.pm/audit/agent-action-log.ndjson
+
+# Python caches
+__pycache__/
+*.pyc
+
+# Local virtual environments
+.venv/
+venv/

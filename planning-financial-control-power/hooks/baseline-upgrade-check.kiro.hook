@@ -1,0 +1,14 @@
+{
+  "name": "pfc-baseline-upgrade-check",
+  "description": "Validate whether the project can move to M3 Controlled Baseline.",
+  "scope": "workspace",
+  "trigger": {
+    "event": "manual",
+    "command": "pfc-upgrade-to-baseline"
+  },
+  "action": {
+    "type": "agent_prompt",
+    "agent": "pm-controller",
+    "prompt": "Check readiness for M3 Controlled Baseline. Require approved scope, timeline baseline, resource baseline, financial baseline, evidence, and decision log. If not ready, update missing-data-log and blocked outputs."
+  }
+}

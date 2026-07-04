@@ -1,0 +1,164 @@
+contract_version: "0.1"
+skill_id: "DL-12-PLAN-resource-allocator"
+skill_name: "Resource Allocator"
+category: "PLAN"
+maturity: "detailed"
+owner: "external-dl-skill-base"
+status: "active"
+
+purpose:
+  summary: "Create resource allocation and capacity/conflict candidates from work packages, milestones, roles, availability, and constraints."
+  guarantees:
+    - "returns role/FTE allocation candidates"
+    - "returns capacity conflicts or missing capacity data"
+    - "links allocation to work packages and milestones when possible"
+  non_goals:
+    - "does not approve timeline"
+    - "does not approve cost"
+    - "does not confirm named resource without source"
+
+input_contract:
+  required_inputs:
+    - "work_packages"
+    - "milestones_or_duration"
+    - "roles_or_team_capacity"
+  optional_inputs:
+    - "named_resources"
+    - "capacity_constraints"
+    - "vendor_internal_split"
+    - "risks"
+  accepted_graph_nodes:
+    - "work_packages"
+    - "milestones"
+    - "resource_allocations"
+    - "risks"
+    - "assumptions"
+    - "evidence"
+  accepted_files:
+    - "resource-plan-summary"
+    - "capacity-summary"
+  accepted_context_types:
+    - "run_context_graph"
+  forbidden_inputs:
+    - "unsupported cost approval"
+
+output_contract:
+  required_outputs:
+    - "resource_allocations"
+    - "capacity_notes"
+    - "resource_assumptions"
+  optional_outputs:
+    - "resource_conflicts"
+    - "decision_needed"
+  output_format: "yaml"
+  produced_graph_deltas:
+    - "resource_allocations"
+    - "risks"
+    - "assumptions"
+    - "missing_data"
+  produced_artifacts: []
+  confidence_required: true
+
+preconditions:
+  readiness_modes_allowed:
+    - "M1"
+    - "M2"
+    - "M3"
+  required_graph_nodes:
+    - "work_packages"
+  required_evidence: []
+  required_decisions: []
+  required_assumptions_allowed:
+    - "fte"
+    - "capacity"
+    - "resource availability"
+
+postconditions:
+  guaranteed_outputs:
+    - "allocations are linked to work package or missing-data is returned"
+  validation_checks:
+    - "allocation has role, fte, period or missing data"
+    - "named resource requires evidence or assumption"
+  graph_delta_rules:
+    - "may propose resource allocation, risk, assumption, missing data deltas"
+
+side_effects:
+  writes_files: false
+  writes_graph: false
+  creates_artifacts: false
+  mutates_external_system: false
+  notes: "Returns resource draft deltas only."
+
+constraints:
+  must_not_claim:
+    - "resource is confirmed without evidence"
+    - "capacity is sufficient without capacity basis"
+    - "cost is approved"
+    - "timeline is approved"
+  must_not_write:
+    - "cost_lines"
+    - "forecasts"
+    - "baseline_version"
+  max_scope: "resource allocation and capacity signal"
+  authority_limit: "draft resource deltas"
+
+failure_modes:
+  missing_input: "return missing role/capacity/period items"
+  ambiguous_input: "mark allocation as assumption"
+  unsupported_request: "return unsupported capability"
+  low_confidence: "downgrade to resource demand model"
+
+control_requirements:
+  required_guardrails:
+    - "no feasibility claim without capacity basis"
+    - "resource change must trigger timeline/cost cascade"
+  required_circuit_breakers:
+    - "Cascade breaker"
+    - "Finance breaker"
+    - "Evidence breaker"
+  required_bias_checks:
+    - "do not assume 100 percent availability"
+    - "do not assume adding people improves timeline linearly"
+  required_hallucination_checks:
+    - "named resources require source or assumption"
+    - "conflict formula/source must be shown"
+  required_hooks_before: []
+  required_hooks_after:
+    - "cascade-check"
+
+evidence_rule:
+  accepted_sources:
+    - "project_control_graph"
+    - "resource plan"
+    - "capacity sheet"
+    - "manager confirmation"
+    - "user assumption"
+  source_required_for_claims: true
+  assumptions_allowed: true
+  historical_data_allowed_as: "benchmark_only"
+
+pfc_integration:
+  supported_use_cases:
+    - "UC-00"
+    - "UC-09"
+    - "UC-10"
+    - "UC-11"
+    - "UC-12"
+    - "UC-15"
+    - "UC-22"
+    - "UC-23"
+  primary_agent_role: "resource-planner"
+  graph_nodes_read:
+    - "work_packages"
+    - "milestones"
+    - "resource_allocations"
+    - "risks"
+    - "assumptions"
+    - "evidence"
+  graph_nodes_written_as_delta:
+    - "resource_allocations"
+    - "risks"
+    - "assumptions"
+    - "missing_data"
+  write_back_authority: "approved_delta_only"
+  result_validator: "pfc-result-validator"

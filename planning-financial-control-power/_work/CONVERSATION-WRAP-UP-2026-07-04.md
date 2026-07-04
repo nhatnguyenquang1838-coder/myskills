@@ -77,20 +77,20 @@ scripts/install-workspace.ps1
 
 ## Latest cleanup
 
-Removed:
+Removed redundant shared runtime templates:
 
 ```txt
 templates/agent-action-log.yaml
 templates/agent-action-log.ndjson
-```
-
-Retained:
-
-```txt
 templates/ide-event-log.ndjson
 ```
 
-Reason: connector blocked deletion once. It is no longer copied by bootstrap and is not part of the runtime source-of-truth model.
+Bootstrap now creates directories only:
+
+```txt
+.pm/audit/runs/
+.kiro/logs/runs/
+```
 
 ## Key commands for next chat / Kiro
 

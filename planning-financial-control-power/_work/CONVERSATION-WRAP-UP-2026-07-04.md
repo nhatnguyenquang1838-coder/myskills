@@ -28,17 +28,18 @@ Readiness: 3.91 / 5
 12. 22-UC enforcement matrix
 13. Agent action logging policy/schema
 14. Production-safe logging layer for Kiro/Python tools
+15. Parallel-safe per-run logging cleanup
 ```
 
-## Latest production logging decision
+## Latest logging decision
 
-Use hybrid logging:
+Use hybrid, parallel-safe logging:
 
 ```txt
-Safe tool debug log: .kiro/logs/power_steps.log
-Semantic audit log:  .pm/audit/agent-action-log.ndjson
-Turn analysis log:   .pm/audit/turn-analysis-log.md
-Raw IDE event log:   .pm/audit/ide-event-log.ndjson
+Safe tool debug log: .kiro/logs/runs/{run_id}.log
+Semantic audit log:  .pm/audit/runs/{run_id}.agent-action.ndjson
+Turn analysis log:   .pm/audit/runs/{run_id}.turn-analysis.md
+Raw IDE event log:   .pm/audit/runs/{run_id}.ide-event.ndjson
 ```
 
 Rule:
@@ -48,18 +49,15 @@ Log every semantic step.
 Do not ask LLM to analyze continuously.
 Analyze logs only on explicit request.
 Never write diagnostic text to stdout in MCP stdio tools.
+Every parallel run writes to its own files.
+Per-run files are source of truth.
+Shared aggregate logs are optional only.
 ```
 
 ## Latest files added
 
 ```txt
-steering/20-logging-depth-policy.md
-tools/kiro_safe_logging.py
-tools/logging-usage.md
-templates/agent-action-log.ndjson
-templates/ide-event-log.ndjson
-templates/turn-analysis-log.md
-checkpoints/2026-07-04-production-logging-layer.md
+checkpoints/2026-07-04-parallel-safe-logging-cleanup.md
 ```
 
 ## Latest files updated
@@ -67,10 +65,32 @@ checkpoints/2026-07-04-production-logging-layer.md
 ```txt
 README.md
 _work/TASKS.md
+_work/CONVERSATION-WRAP-UP-2026-07-04.md
+steering/20-logging-depth-policy.md
+tools/kiro_safe_logging.py
+tools/logging-usage.md
+schemas/agent-action-log.schema.json
 scripts/install-workspace.sh
 scripts/install-workspace.ps1
 .gitignore
 ```
+
+## Latest cleanup
+
+Removed:
+
+```txt
+templates/agent-action-log.yaml
+templates/agent-action-log.ndjson
+```
+
+Retained:
+
+```txt
+templates/ide-event-log.ndjson
+```
+
+Reason: connector blocked deletion once. It is no longer copied by bootstrap and is not part of the runtime source-of-truth model.
 
 ## Key commands for next chat / Kiro
 
@@ -86,10 +106,10 @@ Smoke-test safe logging:
 python tools/kiro_safe_logging.py
 ```
 
-Tail live debug log:
+Tail live debug log for one run:
 
 ```bash
-tail -f .kiro/logs/power_steps.log
+tail -f .kiro/logs/runs/RUN-SMOKE.log
 ```
 
 Validate graph/contracts:

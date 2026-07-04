@@ -1,0 +1,53 @@
+project:
+  id: PRJ-001
+  name: TBD
+  baseline_version: BL-DRAFT-001
+  readiness_mode: M0
+  baseline_status: draft
+  reporting_date: TBD
+
+work_packages:
+  - id: WP-001
+    type: work_package
+    name: TBD
+    status: draft
+    baseline_version: BL-DRAFT-001
+    confidence: low
+    source_ids: []
+    assumption_ids: [ASM-001]
+    decision_ids: []
+    risk_ids: []
+    last_updated: TBD
+
+milestones: []
+dependencies: []
+resource_allocations: []
+rate_cards: []
+cost_lines: []
+forecasts: []
+reports: []
+
+evidence: []
+
+assumptions:
+  - id: ASM-001
+    type: assumption
+    text: Scope is not yet confirmed.
+    impact_if_wrong: Timeline, resource, and cost may change.
+    confidence: low
+    last_updated: TBD
+
+risks: []
+decisions: []
+change_requests: []
+
+missing_data:
+  - id: MD-001
+    item: Approved scope
+    required_for: timeline baseline
+    impact: Cannot produce official RAG or controlled baseline.
+    owner: PM
+    blocking_level: limitation
+    status: open
+
+history_references: []

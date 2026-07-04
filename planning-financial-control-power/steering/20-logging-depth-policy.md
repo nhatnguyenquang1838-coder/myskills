@@ -13,6 +13,7 @@ Use hybrid, parallel-safe logging:
 2. Safe local debug log: always on for Python tools, per run
 3. Turn analysis log: written only when requested or at explicit checkpoint, per run
 4. Raw IDE event log: optional/debug/failure mode, per run
+5. Hook execution logs: tiered into blocking and async
 ```
 
 ## Logging layers
@@ -32,6 +33,89 @@ Every parallel run must write to its own files.
 Every log line must include run_id and pid.
 Per-run files are the source of truth.
 Shared aggregate logs are optional and best-effort only.
+```
+
+## Hook execution tiers
+
+Hooks must declare `execution_tier` in `schemas/kiro-hook.schema.json`.
+
+| Tier | Value | Execution mode | Examples | Critical-path behavior |
+|---|---|---|---|---|
+| Tier 1 | `blocking` | synchronous | YAML/JSON schema validation, `baseline-upgrade-check.kiro.hook`, finance invariant checks | must finish before the next semantic turn or write-back |
+| Tier 2 | `async` | background/parallel | `context-audit.kiro.hook`, `workflow-gap-review.md`, heavy qualitative BCBS239 review | must not block the agent's next semantic turn |
+
+## Tier 1 — blocking hooks
+
+Purpose:
+
+```txt
+Stop unsafe graph mutation, invalid schema, broken budget math, or baseline violations before they can be committed.
+```
+
+Allowed Tier 1 work:
+
+```txt
+YAML/JSON syntax checks
+Project Control Graph schema validation
+DL Skill contract schema validation
+budget/cost sum invariant checks
+baseline freeze structural checks
+State Lock acquisition/release checks
+```
+
+Rules:
+
+```txt
+blocking hooks run synchronously
+blocking hooks must be deterministic
+blocking hooks must not call broad retrieval
+blocking hooks must not request full conversation history
+blocking hooks may block write-back
+```
+
+## Tier 2 — async hooks
+
+Purpose:
+
+```txt
+Run heavy qualitative audits without increasing critical-path latency or exhausting context.
+```
+
+Allowed Tier 2 work:
+
+```txt
+context audit
+workflow gap review
+BCBS239 qualitative alignment review
+history-bias analysis
+long-form report quality review
+multi-file improvement suggestions
+```
+
+Rules:
+
+```txt
+async hooks are scheduled in the background
+async hooks write findings to per-run audit files
+async hooks cannot directly mutate Project Control Graph
+async findings become input to the next checkpoint or explicit review request
+async hooks may open a follow-up issue/blocker but cannot retroactively rewrite an already committed graph state
+```
+
+## Tier interaction rule
+
+```txt
+Tier 1 protects correctness now.
+Tier 2 improves quality later.
+```
+
+If Tier 2 finds a severe issue after the agent has moved on:
+
+```txt
+1. write finding to .pm/audit/runs/{run_id}.agent-action.ndjson
+2. create or update missing-data/risk/blocker record
+3. mark next related output as requiring review
+4. do not silently mutate the graph
 ```
 
 ## stdout rule for MCP stdio tools
@@ -91,6 +175,16 @@ WRITEBACK_REQUESTED
 WRITEBACK_DONE / WRITEBACK_BLOCKED
 CHECKPOINT_WRITTEN
 ERROR_HANDLED
+```
+
+For hooks, also log:
+
+```txt
+HOOK_VALIDATED
+HOOK_EXECUTION_STARTED
+HOOK_EXECUTION_BACKGROUND_SCHEDULED
+HOOK_EXECUTION_COMPLETED
+HOOK_EXECUTION_FAILED
 ```
 
 ## What not to force into LLM context

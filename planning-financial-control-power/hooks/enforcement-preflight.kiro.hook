@@ -1,0 +1,15 @@
+{
+  "name": "pfc-enforcement-preflight",
+  "description": "Run E0-E3 enforcement gates before any PFC workflow: intent, readiness, graph, and context/memory checks.",
+  "scope": "workspace",
+  "trigger": {
+    "event": "manual",
+    "command": "pfc-enforcement-preflight"
+  },
+  "action": {
+    "type": "agent_prompt",
+    "agent": "pm-controller",
+    "prompt": "Run PFC enforcement preflight. Check E0 Intent gate, E1 Readiness gate, E2 Graph gate, and E3 Context/memory gate. Return mode, run type, use case, target graph IDs, missing data, blocked claims, and breaker state. Do not execute DL Skills yet."
+  },
+  "status": "template_only_until_kiro_hook_schema_verified"
+}

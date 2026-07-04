@@ -6,7 +6,9 @@ $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $PowerDir = Split-Path -Parent $ScriptDir
 $PmDir = Join-Path $TargetDir ".pm"
-$KiroLogDir = Join-Path $TargetDir ".kiro\logs"
+$KiroDir = Join-Path $TargetDir ".kiro"
+$KiroLogDir = Join-Path $KiroDir "logs"
+$KiroHookDir = Join-Path $KiroDir "hooks"
 
 $Dirs = @(
   "control",
@@ -24,6 +26,7 @@ foreach ($d in $Dirs) {
 }
 
 New-Item -ItemType Directory -Force -Path (Join-Path $KiroLogDir "runs") | Out-Null
+New-Item -ItemType Directory -Force -Path $KiroHookDir | Out-Null
 
 function Copy-IfMissing($src, $dst) {
   if (-not (Test-Path $dst)) {
@@ -43,6 +46,14 @@ Copy-IfMissing (Join-Path $PowerDir "templates/context-retrieval-log.md") (Join-
 Copy-IfMissing (Join-Path $PowerDir "templates/run-execution-record.md") (Join-Path $PmDir "audit/run-execution-record.md")
 Copy-IfMissing (Join-Path $PowerDir "templates/memory-index.yaml") (Join-Path $PmDir "memory/memory-index.yaml")
 
+$SourceHookDir = Join-Path $PowerDir "hooks\kiro-v1"
+if (Test-Path $SourceHookDir) {
+  Get-ChildItem -Path $SourceHookDir -Filter "*.json" | ForEach-Object {
+    Copy-IfMissing $_.FullName (Join-Path $KiroHookDir $_.Name)
+  }
+}
+
 Write-Host "PFC workspace bootstrap complete: $PmDir"
 Write-Host "Parallel-safe PFC audit run directory ready: $(Join-Path $PmDir 'audit\runs')"
 Write-Host "Parallel-safe Kiro debug run directory ready: $(Join-Path $KiroLogDir 'runs')"
+Write-Host "Kiro hook directory ready: $KiroHookDir"

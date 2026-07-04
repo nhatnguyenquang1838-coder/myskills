@@ -1,0 +1,15 @@
+{
+  "name": "pfc-enforcement-contract-gate",
+  "description": "Run E4 Contract gate before calling any external DL Skill.",
+  "scope": "workspace",
+  "trigger": {
+    "event": "manual",
+    "command": "pfc-enforcement-contract-gate"
+  },
+  "action": {
+    "type": "agent_prompt",
+    "agent": "pm-controller",
+    "prompt": "Run PFC E4 Contract gate. Verify each requested DL Skill contract exists, supports the current UC, accepts the Run Context Graph nodes, has required inputs, has sufficient maturity for requested output authority, and declares required guardrails/breakers. If any check fails, open Contract breaker and block controlled skill call."
+  },
+  "status": "template_only_until_kiro_hook_schema_verified"
+}

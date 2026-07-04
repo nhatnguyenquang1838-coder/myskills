@@ -41,6 +41,12 @@ P2 = useful after live
 | P0-18 | Add expected output for executive report breaker | PFC | DONE | `tests/expected-outputs/executive-report-breaker.md` |
 | P0-19 | Update readiness scorecard after P0 complete | PFC | DONE | `tests/readiness-scorecard.md` |
 | P0-20 | Update README with live usage | PFC | DONE | `README.md` update |
+| P0-21 | Add workflow enforcement layer | PFC | DONE | `steering/18-workflow-enforcement-policy.md` + UC enforcement matrix |
+| P0-22 | Add agent action logging policy/schema | PFC | DONE | `steering/19-agent-action-logging-policy.md`, `schemas/agent-action-log.schema.json` |
+| P0-23 | Add logging depth policy | PFC | DONE | `steering/20-logging-depth-policy.md` |
+| P0-24 | Add Kiro-safe Python logging utility | PFC | DONE | `tools/kiro_safe_logging.py` |
+| P0-25 | Bootstrap audit/runtime logging files | PFC | DONE | `agent-action-log.ndjson`, `ide-event-log.ndjson`, `turn-analysis-log.md` |
+| P0-26 | Add runtime log gitignore rules | PFC | DONE | `.gitignore` |
 
 ## P1 — Required for team pilot
 
@@ -56,6 +62,8 @@ P2 = useful after live
 | P1-08 | Add dry run for history-as-truth blocker | PFC | TODO | scenario + expected output |
 | P1-09 | Add one real sample project walkthrough | PFC | TODO | `examples/sample-project-walkthrough/` |
 | P1-10 | Create v0.3 team pilot checklist | PFC | TODO | `_work/milestones/v0.3-team-pilot.md` |
+| P1-11 | Run logging smoke test in clean workspace | PFC/Kiro | TODO | evidence that `.kiro/logs/power_steps.log` and `.pm/audit/agent-action-log.ndjson` are written |
+| P1-12 | Convert hook templates to verified native Kiro v1 schema | PFC/Kiro | TODO | native hooks for logging/enforcement |
 
 ## P2 — After live
 
@@ -78,6 +86,8 @@ DONE: P0-14/15 install scripts
 DONE: P0-16..18 dry run tests / expected outputs
 DONE: P0-19 rescore
 DONE: P0-20 live README
+DONE: P0-21 enforcement layer
+DONE: P0-22..26 production logging layer
 ```
 
 ## MVP live blocker list
@@ -88,7 +98,9 @@ RESOLVED: BLOCKER-02 no executable validation script
 RESOLVED: BLOCKER-03 top DL Skill contracts are still registry-level only
 RESOLVED: BLOCKER-04 install/bootstrap not created
 RESOLVED: BLOCKER-05 expected outputs not created
+RESOLVED: BLOCKER-09 production-safe logging model missing
 OPEN:     BLOCKER-06 hooks not schema-verified
 OPEN:     BLOCKER-07 validators not yet run in a clean local checkout
 OPEN:     BLOCKER-08 bootstrap not yet tested in a real target workspace
+OPEN:     BLOCKER-10 logging smoke test not yet run in clean workspace
 ```

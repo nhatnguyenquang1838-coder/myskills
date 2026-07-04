@@ -49,6 +49,11 @@ P2 = useful after live
 | P0-26 | Add runtime log gitignore rules | PFC | DONE | `.gitignore` |
 | P0-27 | Make logging parallel-safe | PFC | DONE | per-run debug/audit/IDE/turn analysis files |
 | P0-28 | Clean redundant shared logging templates | PFC | DONE | removed YAML/shared NDJSON runtime templates |
+| P0-29 | Add Bounded-Convergence-Loop execution pattern | PFC | DONE | `steering/16-run-graph-policy.md`, `knowledge/runtime/pfc-runtime-execution-engine.md` |
+| P0-30 | Add State Lock mechanism for Project Control Graph writes | PFC | DONE | `knowledge/runtime/pfc-runtime-execution-engine.md` |
+| P0-31 | Add Circuit Breaker context isolation | PFC | DONE | `steering/11-circuit-breaker-policy.md`, `knowledge/support/memory-context-controller.md` |
+| P0-32 | Add deterministic DL-27 finance invariant checks | PFC | DONE | `tools/check_pfc_output_enforcement.py` |
+| P0-33 | Require BCBS239 tags in semantic action logs | PFC | DONE | `schemas/agent-action-log.schema.json`, `tools/kiro_safe_logging.py` |
 
 ## P1 — Required for team pilot
 
@@ -67,6 +72,10 @@ P2 = useful after live
 | P1-11 | Run logging smoke test in clean workspace | PFC | DONE | `.kiro/logs/runs/RUN-SMOKE.log` + `.pm/audit/runs/RUN-SMOKE.*` smoke evidence |
 | P1-12 | Convert hook templates to verified native Kiro v1 schema | PFC | DONE | `hooks/kiro-v1/pfc-workspace-hooks.json` installed to `.kiro/hooks/` |
 | P1-13 | Run full graph/contract validators in clean checkout | PFC/Kiro | TODO | local checkout validation transcript |
+| P1-14 | Run tiered hook validator in clean checkout | PFC/Kiro | TODO | evidence `execution_tier` schema passes and async scheduling does not block |
+| P1-15 | Run deterministic DL-27 invariant fixture tests | PFC/Kiro | TODO | passing and failing finance output examples |
+| P1-16 | Pilot State Lock in concurrent Kiro workflow | PFC/Kiro | TODO | evidence lock blocks conflicting writes |
+| P1-17 | Pilot Isolate-and-Condense after breaker trip | PFC/Kiro | TODO | recovery packet evidence without full history replay |
 
 ## P2 — After live
 
@@ -93,10 +102,12 @@ DONE: P0-21 enforcement layer
 DONE: P0-22..26 production logging layer
 DONE: P0-27 parallel-safe logging
 DONE: P0-28 redundant logging cleanup
-DONE: P1-01 Kiro hook schema verified
-DONE: P1-11 logging smoke test
-DONE: P1-12 native Kiro v1 hook bundle
-TODO: P1-13 run full graph/contract validators in clean checkout
+DONE: P0-29 bounded convergence loop
+DONE: P0-30 State Lock mechanism
+DONE: P0-31 Circuit Breaker context isolation
+DONE: P0-32 deterministic finance invariant checks
+DONE: P0-33 BCBS239 action log tags
+TODO: P1-13..17 clean-checkout/runtime evidence
 ```
 
 ## MVP live blocker list
@@ -112,5 +123,10 @@ RESOLVED: BLOCKER-08 bootstrap not yet tested in a target workspace
 RESOLVED: BLOCKER-09 production-safe logging model missing
 RESOLVED: BLOCKER-10 logging smoke test not yet run in clean workspace
 RESOLVED: BLOCKER-11 parallel logging safety missing
+RESOLVED: BLOCKER-12 bounded convergence/state lock missing
+RESOLVED: BLOCKER-13 breaker recovery can replay full history
+RESOLVED: BLOCKER-14 BCBS239 action log tags missing
+RESOLVED: BLOCKER-15 DL-27 deterministic finance invariant missing
 OPEN:     BLOCKER-07 validators not yet run in a clean local checkout
+OPEN:     BLOCKER-16 tiered hooks/state lock/invariant runtime pilots not yet run in clean checkout
 ```

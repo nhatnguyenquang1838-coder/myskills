@@ -1,0 +1,14 @@
+{
+  "name": "pfc-context-audit",
+  "description": "Audit context before major planning, finance, or reporting output.",
+  "scope": "workspace",
+  "trigger": {
+    "event": "manual",
+    "command": "pfc-context-audit"
+  },
+  "action": {
+    "type": "agent_prompt",
+    "agent": "pm-context-auditor",
+    "prompt": "Run context-audit. Verify current baseline is loaded, context is graph-linked, history is labeled as benchmark only, and no stale/unlinked context is driving conclusions."
+  }
+}

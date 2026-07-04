@@ -1,0 +1,16 @@
+{
+  "name": "pfc-report-fact-check",
+  "description": "Fact-check report outputs before publication.",
+  "scope": "workspace",
+  "trigger": {
+    "event": "file_save",
+    "patterns": [
+      ".pm/reports/*.md"
+    ]
+  },
+  "action": {
+    "type": "agent_prompt",
+    "agent": "pm-fact-checker",
+    "prompt": "Run fact-check against the saved report. Reject unsupported timeline, cost, resource, RAG, delay, or decision claims. Require graph node IDs, evidence, assumptions, decisions, derived calculations, or baseline version."
+  }
+}

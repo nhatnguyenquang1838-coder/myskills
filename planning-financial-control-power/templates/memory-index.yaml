@@ -1,0 +1,33 @@
+memories:
+  - id: MEM-001
+    type: decision
+    text: TBD
+    source: TBD
+    source_id: EVD-001
+    linked_graph_ids: []
+    confidence: low
+    created_date: TBD
+    review_date: TBD
+    status: active
+
+  - id: MEM-002
+    type: historical_benchmark
+    text: TBD
+    source: history-index
+    linked_graph_ids: []
+    confidence: low
+    use_as: benchmark_only
+    created_date: TBD
+    review_date: TBD
+    status: active
+
+metadata:
+  authority_order:
+    - approved_baseline
+    - latest_approved_decision
+    - current_graph_forecast
+    - documented_evidence
+    - assumption
+    - historical_benchmark
+    - raw_archive
+  rule: Memory supports the graph. Memory does not replace the graph.

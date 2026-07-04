@@ -1,0 +1,9 @@
+{
+  "servers": {},
+  "notes": [
+    "MVP must work without MCP integrations.",
+    "Add Jira, Confluence, Google Sheets, GitHub, Gmail, or Calendar MCP only when available.",
+    "MCP improves evidence ingestion but must not replace the Project Control Graph as source of truth.",
+    "Use environment variables for secrets. Do not store API keys in this repository."
+  ]
+}

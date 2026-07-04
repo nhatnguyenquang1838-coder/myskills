@@ -2,13 +2,14 @@
 
 ## Purpose
 
-Memory Context Controller manages how the Power remembers, retrieves, validates, and forgets project context.
+Memory Context Controller manages how the Power remembers, retrieves, validates, forgets, and isolates project context.
 
-It prevents two failure modes:
+It prevents three failure modes:
 
 ```txt
 1. The Power forgets important project decisions.
 2. The Power overuses stale/historical context and creates biased output.
+3. The Power exhausts the context window after a Circuit Breaker trip by replaying failed history.
 ```
 
 ## Core principle
@@ -33,6 +34,7 @@ The source of truth remains:
 | L2 Project memory | Approved graph nodes, assumptions, decisions, evidence | high |
 | L3 Historical memory | Similar old projects, lessons learned, benchmarks | benchmark only |
 | L4 Raw archive | emails, transcripts, old docs, exports | low until indexed |
+| L5 Failure recovery packet | isolated breaker recovery context | narrow and temporary |
 
 ## Memory types
 
@@ -44,6 +46,7 @@ The source of truth remains:
 | Missing-data memory | known gap | QE capacity unknown |
 | Pattern memory | reusable method/pattern | timeline delay cascade |
 | Historical memory | benchmark/risk signal | similar project delayed due to vendor API |
+| Failure recovery memory | breaker recovery packet | isolated context after Finance breaker |
 
 ## Memory write rules
 
@@ -67,6 +70,7 @@ random chat observations
 unsupported opinions
 old project facts as current facts
 private/sensitive details not needed for planning control
+full failed conversation history after breaker trip
 ```
 
 ## Memory retrieval rules
@@ -112,6 +116,7 @@ Default review windows:
 | Missing-data memory | every intake/checkpoint |
 | Historical memory | every use |
 | Pattern memory | quarterly or after failure |
+| Failure recovery memory | one recovery turn only |
 
 ## Conflict resolution
 
@@ -134,6 +139,93 @@ If memory conflicts with current graph:
 2. Flag conflict.
 3. Create or update missing-data/decision-needed item.
 4. Do not merge silently.
+```
+
+## Isolate-and-Condense function
+
+Purpose:
+
+```txt
+Prevent context exhaustion and repeated hallucination after a Circuit Breaker trip.
+```
+
+Trigger:
+
+```txt
+Circuit Breaker state is HALF_OPEN or OPEN.
+```
+
+Hard rule:
+
+```txt
+When the circuit breaker trips, Kiro must intercept the prompt window, wipe the conversational memory buffer for the recovery turn, and inject only the failure recovery packet.
+```
+
+Function contract:
+
+```txt
+isolate_and_condense(breaker_event, breached_constraint, circuit_breaker_log) -> failure_recovery_packet
+```
+
+Allowed recovery packet contents:
+
+```txt
+1. A 2-sentence summary of the failure state.
+2. The exact breached constraint from contracts/dl-skill-contract-schema.yaml or the relevant schema/policy that failed.
+3. The structured error log from templates/circuit-breaker-log.md.
+```
+
+Forbidden recovery packet contents:
+
+```txt
+full trailing conversation
+raw chain of thought
+unbounded chat history
+all project files
+all historical examples
+multiple old failed attempts
+```
+
+Recovery packet shape:
+
+```yaml
+failure_recovery_packet:
+  breaker: Finance breaker
+  severity: S3
+  failure_summary:
+    - "The requested budget status cannot be confirmed because cost line totals do not reconcile to the declared total budget."
+    - "Official budget/RAG output is blocked until deterministic finance invariants pass."
+  breached_constraint:
+    source: contracts/dl-skill-contract-schema.yaml
+    exact_text: "Skill outputs must satisfy declared output contract and may not create unsupported financial claims."
+  circuit_breaker_log:
+    breaker: Finance breaker
+    blocked_claims:
+      - "on budget"
+    missing_data:
+      - "reconciled cost line total"
+    allowed_fallback: "draft scenario with failed reconciliation shown"
+  next_allowed_actions:
+    - "recalculate deterministic totals"
+    - "ask for corrected cost payload"
+    - "keep output as blocked/draft"
+```
+
+Context budget rule:
+
+```txt
+The failure recovery packet should be small enough to fit into a single recovery turn.
+Target: <= 1,500 tokens.
+```
+
+Post-isolation behavior:
+
+```txt
+1. Do not resume from full conversation history.
+2. Do not call broad retrieval.
+3. Rebuild Run Context Graph from target IDs only if needed.
+4. Use exact breached constraint and structured error log as recovery authority.
+5. Allow only recovery, clarification, or downgraded output.
 ```
 
 ## Memory index format
@@ -204,6 +296,18 @@ output_claims_supported
 9. Log retrieval when memory influences output.
 ```
 
+## Circuit breaker recovery workflow
+
+```txt
+1. Receive breaker_event.
+2. Stop normal memory retrieval.
+3. Run Isolate-and-Condense.
+4. Wipe conversational memory buffer for recovery turn.
+5. Inject only failure_recovery_packet.
+6. Execute recovery action or ask critical clarification.
+7. Discard failure recovery packet after one recovery turn unless explicitly checkpointed.
+```
+
 ## Circuit breaker connection
 
 Memory Context Controller must trigger Circuit Breaker when:
@@ -214,6 +318,7 @@ memory conflicts with approved baseline
 historical memory is used as current truth
 required linked graph node is missing
 memory has no source or confidence
+recovery attempts require full failed conversation replay
 ```
 
 ## Output labels
@@ -226,6 +331,7 @@ Decision memory
 Assumption memory
 Historical benchmark
 Pattern memory
+Failure recovery packet
 Unknown / missing data
 ```
 
@@ -234,4 +340,5 @@ Unknown / missing data
 ```txt
 Remember enough to be useful.
 Forget or downgrade enough to stay honest.
+Recover with less context than the failed run.
 ```

@@ -2,7 +2,8 @@
 .kiro/logs/
 
 # PFC runtime logs in target workspaces
-.pm/audit/*-log.ndjson
+.pm/audit/runs/
+.pm/audit/*.ndjson
 .pm/audit/*.runtime.md
 .pm/audit/terminal-*.log
 .pm/audit/git-status-log.ndjson

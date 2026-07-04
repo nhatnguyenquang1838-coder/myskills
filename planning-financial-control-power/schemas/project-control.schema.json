@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/pfc/project-control.schema.json",
+  "title": "Planning & Financial Control Project Control Graph",
+  "type": "object",
+  "required": ["project"],
+  "properties": {
+    "project": {
+      "type": "object",
+      "required": ["id", "name", "readiness_mode", "baseline_status"],
+      "properties": {
+        "id": {"type": "string"},
+        "name": {"type": "string"},
+        "baseline_version": {"type": ["string", "null"]},
+        "readiness_mode": {"enum": ["M0", "M1", "M2", "M3"]},
+        "baseline_status": {"enum": ["none", "draft", "forecast_ready", "controlled"]},
+        "reporting_date": {"type": ["string", "null"]}
+      }
+    },
+    "work_packages": {"type": "array", "items": {"$ref": "#/$defs/work_package"}},
+    "milestones": {"type": "array", "items": {"$ref": "#/$defs/milestone"}},
+    "dependencies": {"type": "array", "items": {"$ref": "#/$defs/dependency"}},
+    "resource_allocations": {"type": "array", "items": {"$ref": "#/$defs/resource_allocation"}},
+    "rate_cards": {"type": "array", "items": {"$ref": "#/$defs/rate_card"}},
+    "cost_lines": {"type": "array", "items": {"$ref": "#/$defs/cost_line"}},
+    "forecasts": {"type": "array", "items": {"$ref": "#/$defs/forecast"}},
+    "reports": {"type": "array", "items": {"$ref": "#/$defs/report"}},
+    "evidence": {"type": "array", "items": {"$ref": "#/$defs/evidence"}},
+    "assumptions": {"type": "array", "items": {"$ref": "#/$defs/assumption"}},
+    "risks": {"type": "array", "items": {"$ref": "#/$defs/risk"}},
+    "decisions": {"type": "array", "items": {"$ref": "#/$defs/decision"}},
+    "change_requests": {"type": "array", "items": {"$ref": "#/$defs/change_request"}},
+    "missing_data": {"type": "array", "items": {"$ref": "#/$defs/missing_data"}}
+  },
+  "$defs": {
+    "support_fields": {
+      "type": "object",
+      "properties": {
+        "evidence_ids": {"type": "array", "items": {"type": "string"}},
+        "assumption_ids": {"type": "array", "items": {"type": "string"}},
+        "decision_ids": {"type": "array", "items": {"type": "string"}},
+        "risk_ids": {"type": "array", "items": {"type": "string"}},
+        "baseline_version": {"type": ["string", "null"]},
+        "confidence": {"enum": ["high", "medium", "low", "blocked"]},
+        "last_updated": {"type": ["string", "null"]}
+      }
+    },
+    "work_package": {
+      "allOf": [
+        {"$ref": "#/$defs/support_fields"},
+        {"type": "object", "required": ["id", "name"], "properties": {"id": {"type": "string"}, "name": {"type": "string"}, "status": {"type": "string"}, "milestone_ids": {"type": "array", "items": {"type": "string"}}}}
+      ]
+    },
+    "milestone": {
+      "allOf": [
+        {"$ref": "#/$defs/support_fields"},
+        {"type": "object", "required": ["id", "name"], "properties": {"id": {"type": "string"}, "name": {"type": "string"}, "work_package_ids": {"type": "array", "items": {"type": "string"}}, "start_date": {"type": ["string", "null"]}, "end_date": {"type": ["string", "null"]}, "dependency_ids": {"type": "array", "items": {"type": "string"}}, "status": {"type": "string"}}}
+      ]
+    },
+    "dependency": {"allOf": [{"$ref": "#/$defs/support_fields"}, {"type": "object", "required": ["id", "name"], "properties": {"id": {"type": "string"}, "name": {"type": "string"}, "from": {"type": "string"}, "to": {"type": "string"}, "status": {"type": "string"}}}]},
+    "resource_allocation": {"allOf": [{"$ref": "#/$defs/support_fields"}, {"type": "object", "required": ["id", "work_package_id", "role"], "properties": {"id": {"type": "string"}, "work_package_id": {"type": "string"}, "milestone_id": {"type": ["string", "null"]}, "role": {"type": "string"}, "fte": {"type": "number"}, "start_date": {"type": ["string", "null"]}, "end_date": {"type": ["string", "null"]}, "rate_card_id": {"type": ["string", "null"]}}}]},
+    "rate_card": {"allOf": [{"$ref": "#/$defs/support_fields"}, {"type": "object", "required": ["id", "role"], "properties": {"id": {"type": "string"}, "role": {"type": "string"}, "monthly_rate": {"type": ["number", "null"]}, "currency": {"type": ["string", "null"]}, "source": {"type": ["string", "null"]}}}]},
+    "cost_line": {"type": "object", "required": ["id", "amount", "derived_from"], "properties": {"id": {"type": "string"}, "resource_allocation_id": {"type": ["string", "null"]}, "work_package_id": {"type": ["string", "null"]}, "formula": {"type": ["string", "null"]}, "amount": {"type": "number"}, "currency": {"type": "string"}, "derived_from": {"type": "array", "items": {"type": "string"}}, "assumption_ids": {"type": "array", "items": {"type": "string"}}, "evidence_ids": {"type": "array", "items": {"type": "string"}}}},
+    "forecast": {"type": "object", "required": ["id"], "properties": {"id": {"type": "string"}, "baseline_budget": {"type": ["number", "null"]}, "forecast_amount": {"type": ["number", "null"]}, "variance": {"type": ["number", "null"]}, "status": {"type": ["string", "null"]}, "cost_line_ids": {"type": "array", "items": {"type": "string"}}, "derived_from": {"type": "array", "items": {"type": "string"}}}},
+    "report": {"type": "object", "required": ["id", "type"], "properties": {"id": {"type": "string"}, "type": {"type": "string"}, "timeline_status": {"type": ["string", "null"]}, "resource_status": {"type": ["string", "null"]}, "budget_status": {"type": ["string", "null"]}, "overall_status": {"type": ["string", "null"]}, "source_ids": {"type": "array", "items": {"type": "string"}}}},
+    "evidence": {"type": "object", "required": ["id", "source_type", "source_name"], "properties": {"id": {"type": "string"}, "source_type": {"type": "string"}, "source_name": {"type": "string"}, "date": {"type": ["string", "null"]}, "confidence": {"enum": ["high", "medium", "low"]}}},
+    "assumption": {"type": "object", "required": ["id", "text"], "properties": {"id": {"type": "string"}, "text": {"type": "string"}, "impact_if_wrong": {"type": ["string", "null"]}, "confidence": {"enum": ["high", "medium", "low"]}}},
+    "risk": {"type": "object", "required": ["id", "description"], "properties": {"id": {"type": "string"}, "description": {"type": "string"}, "probability": {"type": ["string", "null"]}, "impact": {"type": ["string", "null"]}, "owner": {"type": ["string", "null"]}, "status": {"type": ["string", "null"]}}},
+    "decision": {"type": "object", "required": ["id", "text"], "properties": {"id": {"type": "string"}, "text": {"type": "string"}, "date": {"type": ["string", "null"]}, "owner": {"type": ["string", "null"]}, "evidence_ids": {"type": "array", "items": {"type": "string"}}}},
+    "change_request": {"type": "object", "required": ["id", "description", "affected_ids"], "properties": {"id": {"type": "string"}, "description": {"type": "string"}, "affected_ids": {"type": "array", "items": {"type": "string"}}, "status": {"type": "string"}}},
+    "missing_data": {"type": "object", "required": ["id", "item", "required_for"], "properties": {"id": {"type": "string"}, "item": {"type": "string"}, "required_for": {"type": "string"}, "impact": {"type": ["string", "null"]}, "owner": {"type": ["string", "null"]}, "status": {"type": "string"}}}
+  }
+}

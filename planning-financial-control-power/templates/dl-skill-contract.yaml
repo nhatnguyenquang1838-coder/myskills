@@ -1,0 +1,81 @@
+contract_version: "0.1"
+skill_id: "DL-XX-CAT-skill-name"
+skill_name: ""
+category: "CORE | PLAN | FIN | RISK | PPL | RPT | TOOL | OTHER"
+maturity: "missing | scaffold | functional | detailed"
+owner: ""
+status: "draft"
+
+purpose:
+  summary: ""
+  guarantees: []
+  non_goals: []
+
+input_contract:
+  required_inputs: []
+  optional_inputs: []
+  accepted_graph_nodes: []
+  accepted_files: []
+  accepted_context_types: []
+  forbidden_inputs: []
+
+output_contract:
+  required_outputs: []
+  optional_outputs: []
+  output_format: "markdown"
+  produced_graph_deltas: []
+  produced_artifacts: []
+  confidence_required: true
+
+preconditions:
+  readiness_modes_allowed: []
+  required_graph_nodes: []
+  required_evidence: []
+  required_decisions: []
+  required_assumptions_allowed: []
+
+postconditions:
+  guaranteed_outputs: []
+  validation_checks: []
+  graph_delta_rules: []
+
+side_effects:
+  writes_files: false
+  writes_graph: false
+  creates_artifacts: false
+  mutates_external_system: false
+  notes: ""
+
+constraints:
+  must_not_claim: []
+  must_not_write: []
+  max_scope: ""
+  authority_limit: ""
+
+failure_modes:
+  missing_input: "return missing-data list"
+  ambiguous_input: "ask critical clarification or mark assumption"
+  unsupported_request: "return unsupported capability"
+  low_confidence: "downgrade output"
+
+control_requirements:
+  required_guardrails: []
+  required_circuit_breakers: []
+  required_bias_checks: []
+  required_hallucination_checks: []
+  required_hooks_before: []
+  required_hooks_after: []
+
+evidence_rule:
+  accepted_sources: []
+  source_required_for_claims: true
+  assumptions_allowed: true
+  historical_data_allowed_as: "benchmark_only"
+
+pfc_integration:
+  supported_use_cases: []
+  primary_agent_role: ""
+  graph_nodes_read: []
+  graph_nodes_written_as_delta: []
+  write_back_authority: "approved_delta_only"
+  result_validator: "pfc-result-validator"

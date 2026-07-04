@@ -1,0 +1,175 @@
+contract_version: "0.1"
+skill_id: "DL-26-RPT-report-builder"
+skill_name: "Report Builder"
+category: "RPT"
+maturity: "detailed"
+owner: "external-dl-skill-base"
+status: "active"
+
+purpose:
+  summary: "Build controlled report drafts from graph-backed timeline, resource, finance, risk, assumption, evidence, and decision inputs."
+  guarantees:
+    - "returns report draft"
+    - "returns blocked/unsupported claims when instructed by PFC"
+    - "uses provided source IDs in report header"
+  non_goals:
+    - "does not decide official status"
+    - "does not approve RAG"
+    - "does not override Circuit Breaker"
+    - "does not write Project Control Graph"
+
+input_contract:
+  required_inputs:
+    - "report_type"
+    - "audience"
+    - "reporting_period"
+    - "source_graph_nodes"
+  optional_inputs:
+    - "timeline_status_signal"
+    - "resource_status_signal"
+    - "budget_status_signal"
+    - "risks"
+    - "decisions"
+    - "blocked_claims"
+  accepted_graph_nodes:
+    - "milestones"
+    - "resource_allocations"
+    - "forecasts"
+    - "risks"
+    - "assumptions"
+    - "evidence"
+    - "decisions"
+    - "reports"
+    - "missing_data"
+  accepted_files:
+    - "report-template"
+    - "status-summary"
+  accepted_context_types:
+    - "run_context_graph"
+  forbidden_inputs:
+    - "unsupported official RAG"
+
+output_contract:
+  required_outputs:
+    - "report_draft"
+    - "report_header"
+    - "source_ids_used"
+    - "blocked_claims_section"
+  optional_outputs:
+    - "decision_needed_section"
+    - "risk_summary"
+    - "executive_summary"
+  output_format: "markdown"
+  produced_graph_deltas:
+    - "reports"
+  produced_artifacts:
+    - "markdown_report"
+  confidence_required: true
+
+preconditions:
+  readiness_modes_allowed:
+    - "M1"
+    - "M2"
+    - "M3"
+  required_graph_nodes: []
+  required_evidence: []
+  required_decisions: []
+  required_assumptions_allowed:
+    - "reporting_period"
+    - "audience"
+
+postconditions:
+  guaranteed_outputs:
+    - "report has control header"
+    - "report marks blocked claims"
+  validation_checks:
+    - "source_ids used are listed"
+    - "official claims are absent unless PFC permits"
+  graph_delta_rules:
+    - "may propose report draft only"
+
+side_effects:
+  writes_files: false
+  writes_graph: false
+  creates_artifacts: true
+  mutates_external_system: false
+  notes: "Returns report artifact; PFC decides persistence."
+
+constraints:
+  must_not_claim:
+    - "official RAG without M3 and breaker CLOSED"
+    - "budget status without finance basis"
+    - "approval without decision_id"
+    - "confirmed status without evidence"
+  must_not_write:
+    - "baseline_version"
+    - "cost_lines"
+    - "forecasts"
+  max_scope: "report composition"
+  authority_limit: "report draft unless PFC grants official authority"
+
+failure_modes:
+  missing_input: "return report skeleton with missing-data section"
+  ambiguous_input: "mark report as draft and ask critical questions"
+  unsupported_request: "return unsupported report type"
+  low_confidence: "downgrade to draft report"
+
+control_requirements:
+  required_guardrails:
+    - "report status must be source-linked"
+    - "official report requires M3 and breaker CLOSED"
+    - "blocked claims must be visible"
+  required_circuit_breakers:
+    - "Evidence breaker"
+    - "Baseline breaker"
+    - "Finance breaker"
+    - "Context breaker"
+    - "History-bias breaker"
+  required_bias_checks:
+    - "include counter-signals"
+    - "do not greenwash status"
+    - "show missing data and risks"
+  required_hallucination_checks:
+    - "every RAG/date/cost/resource claim requires graph support"
+  required_hooks_before: []
+  required_hooks_after:
+    - "report-fact-check"
+    - "circuit-breaker-check"
+
+evidence_rule:
+  accepted_sources:
+    - "project_control_graph"
+    - "evidence ledger"
+    - "decision log"
+    - "forecast"
+    - "risk log"
+    - "missing data log"
+  source_required_for_claims: true
+  assumptions_allowed: true
+  historical_data_allowed_as: "benchmark_only"
+
+pfc_integration:
+  supported_use_cases:
+    - "UC-00"
+    - "UC-18"
+    - "UC-19"
+    - "UC-20"
+    - "UC-21"
+    - "UC-22"
+    - "UC-23"
+    - "UC-33"
+    - "UC-34"
+  primary_agent_role: "report-builder"
+  graph_nodes_read:
+    - "milestones"
+    - "resource_allocations"
+    - "forecasts"
+    - "risks"
+    - "assumptions"
+    - "evidence"
+    - "decisions"
+    - "missing_data"
+  graph_nodes_written_as_delta:
+    - "reports"
+  write_back_authority: "none"
+  result_validator: "pfc-result-validator"

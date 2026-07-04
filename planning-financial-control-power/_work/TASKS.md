@@ -48,7 +48,7 @@ P2 = useful after live
 | P0-25 | Bootstrap audit/runtime logging directories | PFC | DONE | `.pm/audit/runs/`, `.kiro/logs/runs/` |
 | P0-26 | Add runtime log gitignore rules | PFC | DONE | `.gitignore` |
 | P0-27 | Make logging parallel-safe | PFC | DONE | per-run debug/audit/IDE/turn analysis files |
-| P0-28 | Clean redundant shared logging templates | PFC | PARTIAL | YAML/shared action templates removed; shared IDE example template retained because connector blocked deletion |
+| P0-28 | Clean redundant shared logging templates | PFC | DONE | removed YAML/shared NDJSON runtime templates |
 
 ## P1 — Required for team pilot
 
@@ -91,7 +91,7 @@ DONE: P0-20 live README
 DONE: P0-21 enforcement layer
 DONE: P0-22..26 production logging layer
 DONE: P0-27 parallel-safe logging
-PARTIAL: P0-28 redundant logging cleanup
+DONE: P0-28 redundant logging cleanup
 ```
 
 ## MVP live blocker list

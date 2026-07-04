@@ -1,0 +1,1 @@
+{"log_level":"raw_event","ts":"YYYY-MM-DDTHH:MM:SSZ","session_id":"RUN-EXAMPLE","event":"observer_started","summary":"Template event. Raw IDE/tool events are optional and should be local runtime logs."}

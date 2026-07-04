@@ -1,0 +1,164 @@
+contract_version: "0.1"
+skill_id: "DL-11-PLAN-release-milestone-planner"
+skill_name: "Release Milestone Planner"
+category: "PLAN"
+maturity: "detailed"
+owner: "external-dl-skill-base"
+status: "active"
+
+purpose:
+  summary: "Create or update milestone and release plan candidates from work packages, constraints, target dates, and dependencies."
+  guarantees:
+    - "returns milestone candidates"
+    - "returns dependency notes"
+    - "returns date assumptions if dates are not source-backed"
+  non_goals:
+    - "does not calculate final cost"
+    - "does not approve baseline"
+    - "does not confirm resource sufficiency"
+    - "does not publish report"
+
+input_contract:
+  required_inputs:
+    - "work_packages"
+    - "target_dates_or_constraints"
+  optional_inputs:
+    - "dependencies"
+    - "risks"
+    - "decisions"
+    - "evidence"
+  accepted_graph_nodes:
+    - "work_packages"
+    - "milestones"
+    - "dependencies"
+    - "risks"
+    - "assumptions"
+    - "evidence"
+    - "decisions"
+  accepted_files:
+    - "project-plan-summary"
+    - "scope-summary"
+  accepted_context_types:
+    - "run_context_graph"
+  forbidden_inputs:
+    - "unsupported cost conclusion"
+
+output_contract:
+  required_outputs:
+    - "milestone_plan"
+    - "dependency_notes"
+    - "assumptions"
+  optional_outputs:
+    - "critical_path_notes"
+    - "timeline_risks"
+  output_format: "yaml"
+  produced_graph_deltas:
+    - "milestones"
+    - "dependencies"
+    - "assumptions"
+    - "missing_data"
+  produced_artifacts: []
+  confidence_required: true
+
+preconditions:
+  readiness_modes_allowed:
+    - "M1"
+    - "M2"
+    - "M3"
+  required_graph_nodes:
+    - "work_packages"
+  required_evidence: []
+  required_decisions: []
+  required_assumptions_allowed:
+    - "target_date"
+    - "dependency_date"
+
+postconditions:
+  guaranteed_outputs:
+    - "milestones are linked to work packages or missing-data is returned"
+  validation_checks:
+    - "each milestone has id/name/date or missing date"
+    - "each date has evidence, decision, or assumption"
+  graph_delta_rules:
+    - "may propose milestone/dependency deltas only"
+
+side_effects:
+  writes_files: false
+  writes_graph: false
+  creates_artifacts: false
+  mutates_external_system: false
+  notes: "Returns milestone/dependency draft deltas only."
+
+constraints:
+  must_not_claim:
+    - "cost is acceptable"
+    - "resource is sufficient"
+    - "baseline is approved"
+    - "project is on track"
+  must_not_write:
+    - "cost_lines"
+    - "forecasts"
+    - "baseline_version"
+  max_scope: "timeline and dependency planning"
+  authority_limit: "draft timeline deltas"
+
+failure_modes:
+  missing_input: "return missing work package or target date items"
+  ambiguous_input: "mark dates/dependencies as assumptions"
+  unsupported_request: "return unsupported capability"
+  low_confidence: "downgrade to draft timeline"
+
+control_requirements:
+  required_guardrails:
+    - "dates require evidence, decision, or assumption"
+    - "report cannot update directly after milestone change"
+  required_circuit_breakers:
+    - "Evidence breaker"
+    - "Cascade breaker"
+    - "Baseline breaker"
+  required_bias_checks:
+    - "do not copy historical duration without benchmark label"
+    - "avoid optimism bias on recovery"
+  required_hallucination_checks:
+    - "no invented dependency"
+    - "no unsupported date"
+  required_hooks_before: []
+  required_hooks_after:
+    - "cascade-check"
+
+evidence_rule:
+  accepted_sources:
+    - "project_control_graph"
+    - "scope document"
+    - "project plan"
+    - "decision log"
+    - "user assumption"
+  source_required_for_claims: true
+  assumptions_allowed: true
+  historical_data_allowed_as: "benchmark_only"
+
+pfc_integration:
+  supported_use_cases:
+    - "UC-00"
+    - "UC-05"
+    - "UC-06"
+    - "UC-07"
+    - "UC-08"
+    - "UC-22"
+    - "UC-23"
+    - "UC-24"
+  primary_agent_role: "timeline-planner"
+  graph_nodes_read:
+    - "work_packages"
+    - "dependencies"
+    - "risks"
+    - "assumptions"
+    - "evidence"
+    - "decisions"
+  graph_nodes_written_as_delta:
+    - "milestones"
+    - "dependencies"
+    - "assumptions"
+    - "missing_data"
+  write_back_authority: "approved_delta_only"
+  result_validator: "pfc-result-validator"

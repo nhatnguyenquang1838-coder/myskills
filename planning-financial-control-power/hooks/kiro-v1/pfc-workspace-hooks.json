@@ -1,0 +1,77 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "pfc-cascade-check",
+      "description": "Check graph cascade impact after Project Control Graph changes.",
+      "trigger": "PostFileSave",
+      "matcher": "(^|/)\\.pm/control/project-control\\.ya?ml$",
+      "action": {
+        "type": "agent",
+        "prompt": "Run PFC cascade-impact-check for changed Project Control Graph nodes. Identify affected WP/MS/RA/COST/FCST/RPT nodes, required skills, missing data, and report impact. Do not write graph changes unless explicitly approved."
+      },
+      "timeout": 60,
+      "enabled": true
+    },
+    {
+      "name": "pfc-report-fact-check",
+      "description": "Fact-check report outputs before publication.",
+      "trigger": "PostFileSave",
+      "matcher": "(^|/)\\.pm/reports/.*\\.md$",
+      "action": {
+        "type": "agent",
+        "prompt": "Run PFC report fact-check against the saved report. Reject unsupported timeline, cost, resource, RAG, delay, approval, or decision claims. Require graph node IDs, evidence, assumptions, decisions, derived calculations, or baseline version. Return blocked claims and required recovery."
+      },
+      "timeout": 60,
+      "enabled": true
+    },
+    {
+      "name": "pfc-enforcement-preflight",
+      "description": "Optional preflight gate for PFC workflows. Disabled by default because UserPromptSubmit hooks apply broadly.",
+      "trigger": "UserPromptSubmit",
+      "matcher": ".*",
+      "action": {
+        "type": "agent",
+        "prompt": "Run PFC enforcement preflight only if the user request is a Planning & Financial Control workflow. Check E0 Intent gate, E1 Readiness gate, E2 Graph gate, and E3 Context/memory gate. Return mode, run type, use case, target graph IDs, missing data, blocked claims, and breaker state. Do not execute DL Skills yet."
+      },
+      "timeout": 60,
+      "enabled": false
+    },
+    {
+      "name": "pfc-enforcement-contract-gate",
+      "description": "Optional contract gate before controlled external DL Skill use. Disabled by default until wired to a narrow trigger.",
+      "trigger": "PreTaskExec",
+      "matcher": ".*",
+      "action": {
+        "type": "agent",
+        "prompt": "Run PFC E4 Contract gate. Verify each requested DL Skill contract exists, supports the current UC, accepts the Run Context Graph nodes, has required inputs, has sufficient maturity for requested output authority, and declares required guardrails/breakers. If any check fails, open Contract breaker and block controlled skill call."
+      },
+      "timeout": 60,
+      "enabled": false
+    },
+    {
+      "name": "pfc-enforcement-output-gate",
+      "description": "Optional output gate after skill output and before publishing. Disabled by default until wired to a narrow trigger.",
+      "trigger": "PostTaskExec",
+      "matcher": ".*",
+      "action": {
+        "type": "agent",
+        "prompt": "Run PFC output enforcement. Check E5 Skill output gate, E6 Cascade gate, E7 Finance basis gate, and E8 Report/claim gate. Validate required outputs, allowed graph deltas, forbidden claims, evidence/source support, finance basis, cascade completion, and required output header. Return allowed output, blocked claims, breaker state, and required recovery."
+      },
+      "timeout": 60,
+      "enabled": false
+    },
+    {
+      "name": "pfc-enforcement-writeback-gate",
+      "description": "Optional write-back and checkpoint gate. Disabled by default until wired to a narrow trigger.",
+      "trigger": "PreTaskExec",
+      "matcher": ".*",
+      "action": {
+        "type": "agent",
+        "prompt": "Run PFC write-back enforcement. Check E9 Write-back gate and E10 Checkpoint gate. Verify run type allows write-back, user approval exists, breaker is CLOSED for official write-back, graph schema validation is satisfied or scheduled, previous baseline is preserved if baseline changes, and run execution record/checkpoint is created. If any check fails, keep deltas as draft only."
+      },
+      "timeout": 60,
+      "enabled": false
+    }
+  ]
+}

@@ -15,6 +15,7 @@ scripts/install-workspace.ps1
 README.md
 .gitignore
 _work/TASKS.md
+_work/CONVERSATION-WRAP-UP-2026-07-04.md
 ```
 
 ## Removed
@@ -22,15 +23,8 @@ _work/TASKS.md
 ```txt
 templates/agent-action-log.yaml
 templates/agent-action-log.ndjson
-```
-
-## Retained
-
-```txt
 templates/ide-event-log.ndjson
 ```
-
-Reason: connector blocked deletion once. It is no longer copied by bootstrap and no longer part of the runtime source-of-truth model.
 
 ## New source-of-truth runtime model
 
@@ -50,6 +44,17 @@ Per-run files are source of truth.
 Shared aggregate logs are optional only.
 stdout remains forbidden for MCP diagnostic logging.
 ```
+
+## Bootstrap change
+
+Bootstrap now creates directories only for runtime logs:
+
+```txt
+.pm/audit/runs/
+.kiro/logs/runs/
+```
+
+It no longer copies root-level shared runtime log templates.
 
 ## Remaining blockers
 

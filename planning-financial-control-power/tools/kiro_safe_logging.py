@@ -1,41 +1,103 @@
 #!/usr/bin/env python3
-"""Kiro-safe logging helpers for PFC Power tools.
+"""Parallel-safe Kiro logging helpers for PFC Power tools.
 
 Rules:
 - Do not write diagnostic text to stdout in MCP stdio tools.
-- Use stderr and local files for debug logs.
-- Use .pm/audit/agent-action-log.ndjson for semantic PFC audit events.
+- Use stderr and per-run local files for debug logs.
+- Use .pm/audit/runs/{run_id}.agent-action.ndjson for semantic PFC audit events.
+- Shared aggregate logs are optional convenience only; per-run files are source of truth.
 """
 
 from __future__ import annotations
 
 import json
 import logging
+import os
+import re
 import sys
+import uuid
 from datetime import datetime, timezone
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Any
+
+RUN_ID_PATTERN = re.compile(r"[^A-Za-z0-9_.-]+")
 
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def setup_kiro_logger(name: str = "kiro_power_agent", root: str | Path = ".") -> logging.Logger:
-    """Return a logger that writes to stderr and .kiro/logs/power_steps.log.
+def new_run_id(prefix: str = "RUN") -> str:
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    return f"{prefix}-{stamp}-{uuid.uuid4().hex[:8]}"
 
-    Safe for MCP stdio tools because it does not write diagnostics to stdout.
+
+def sanitize_run_id(run_id: str) -> str:
+    cleaned = RUN_ID_PATTERN.sub("-", run_id.strip())
+    cleaned = cleaned.strip(".-_")
+    return cleaned or new_run_id()
+
+
+def get_run_id(explicit_run_id: str | None = None) -> str:
+    """Resolve run_id from argument, environment, or generated ID."""
+    candidate = explicit_run_id or os.getenv("PFC_RUN_ID") or os.getenv("KIRO_RUN_ID")
+    return sanitize_run_id(candidate) if candidate else new_run_id()
+
+
+def short_run_id(run_id: str) -> str:
+    return sanitize_run_id(run_id)[-8:]
+
+
+def run_debug_log_path(run_id: str, root: str | Path = ".") -> Path:
+    root_path = Path(root).resolve()
+    return root_path / ".kiro" / "logs" / "runs" / f"{sanitize_run_id(run_id)}.log"
+
+
+def agent_action_log_path(run_id: str, root: str | Path = ".") -> Path:
+    root_path = Path(root).resolve()
+    return root_path / ".pm" / "audit" / "runs" / f"{sanitize_run_id(run_id)}.agent-action.ndjson"
+
+
+def ide_event_log_path(run_id: str, root: str | Path = ".") -> Path:
+    root_path = Path(root).resolve()
+    return root_path / ".pm" / "audit" / "runs" / f"{sanitize_run_id(run_id)}.ide-event.ndjson"
+
+
+def turn_analysis_path(run_id: str, root: str | Path = ".") -> Path:
+    root_path = Path(root).resolve()
+    return root_path / ".pm" / "audit" / "runs" / f"{sanitize_run_id(run_id)}.turn-analysis.md"
+
+
+def setup_kiro_logger(
+    name: str = "kiro_power_agent",
+    root: str | Path = ".",
+    run_id: str | None = None,
+    aggregate_log: bool = False,
+) -> logging.Logger:
+    """Return a parallel-safe logger.
+
+    The logger writes to:
+    - stderr, with run_id and pid markers
+    - .kiro/logs/runs/{run_id}.log
+
+    aggregate_log=True also writes to .kiro/logs/power_steps.log, but that file is
+    not the source of truth during parallel execution.
     """
-    logger = logging.getLogger(name)
+    resolved_run_id = get_run_id(run_id)
+    safe_run_id = sanitize_run_id(resolved_run_id)
+    logger_name = f"{name}.{safe_run_id}"
+
+    logger = logging.getLogger(logger_name)
     logger.setLevel(logging.INFO)
     logger.propagate = False
+    setattr(logger, "pfc_run_id", safe_run_id)
 
     if logger.handlers:
         return logger
 
     formatter = logging.Formatter(
-        fmt="%(asctime)s [%(levelname)s] %(message)s",
+        fmt=f"%(asctime)s [%(levelname)s] [run={short_run_id(safe_run_id)}] [pid={os.getpid()}] %(message)s",
         datefmt="%H:%M:%S",
     )
 
@@ -43,12 +105,11 @@ def setup_kiro_logger(name: str = "kiro_power_agent", root: str | Path = ".") ->
     stderr_handler.setFormatter(formatter)
     logger.addHandler(stderr_handler)
 
-    root_path = Path(root).resolve()
-    log_dir = root_path / ".kiro" / "logs"
-    log_dir.mkdir(parents=True, exist_ok=True)
+    per_run_path = run_debug_log_path(safe_run_id, root)
+    per_run_path.parent.mkdir(parents=True, exist_ok=True)
 
     file_handler = RotatingFileHandler(
-        log_dir / "power_steps.log",
+        per_run_path,
         maxBytes=5_000_000,
         backupCount=5,
         encoding="utf-8",
@@ -56,59 +117,96 @@ def setup_kiro_logger(name: str = "kiro_power_agent", root: str | Path = ".") ->
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
 
+    if aggregate_log:
+        root_path = Path(root).resolve()
+        aggregate_path = root_path / ".kiro" / "logs" / "power_steps.log"
+        aggregate_path.parent.mkdir(parents=True, exist_ok=True)
+        aggregate_handler = RotatingFileHandler(
+            aggregate_path,
+            maxBytes=10_000_000,
+            backupCount=3,
+            encoding="utf-8",
+        )
+        aggregate_handler.setFormatter(formatter)
+        logger.addHandler(aggregate_handler)
+
     return logger
 
 
 def append_ndjson(path: Path, event: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     event.setdefault("ts", utc_now())
+    event.setdefault("pid", os.getpid())
     with path.open("a", encoding="utf-8") as f:
         f.write(json.dumps(event, ensure_ascii=False, sort_keys=True) + "\n")
 
 
-def append_agent_action_log(event: dict[str, Any], root: str | Path = ".") -> None:
-    """Append a semantic PFC action event.
+def append_agent_action_log(event: dict[str, Any], root: str | Path = ".", run_id: str | None = None) -> str:
+    """Append a semantic PFC action event to a per-run NDJSON file.
 
-    Intended file:
-      .pm/audit/agent-action-log.ndjson
+    Returns the resolved run_id.
     """
-    root_path = Path(root).resolve()
+    resolved_run_id = get_run_id(run_id or event.get("run_id"))
+    event.setdefault("run_id", resolved_run_id)
     event.setdefault("log_level", "semantic_action")
-    append_ndjson(root_path / ".pm" / "audit" / "agent-action-log.ndjson", event)
+    append_ndjson(agent_action_log_path(resolved_run_id, root), event)
+    return resolved_run_id
 
 
-def append_ide_event_log(event: dict[str, Any], root: str | Path = ".") -> None:
-    """Append optional raw IDE/tool event.
+def append_ide_event_log(event: dict[str, Any], root: str | Path = ".", run_id: str | None = None) -> str:
+    """Append optional raw IDE/tool event to a per-run NDJSON file.
 
-    Intended file:
-      .pm/audit/ide-event-log.ndjson
+    Returns the resolved run_id.
     """
-    root_path = Path(root).resolve()
+    resolved_run_id = get_run_id(run_id or event.get("run_id") or event.get("session_id"))
+    event.setdefault("run_id", resolved_run_id)
     event.setdefault("log_level", "raw_event")
-    append_ndjson(root_path / ".pm" / "audit" / "ide-event-log.ndjson", event)
+    append_ndjson(ide_event_log_path(resolved_run_id, root), event)
+    return resolved_run_id
 
 
-def append_turn_analysis(text: str, root: str | Path = ".") -> None:
-    """Append human-readable turn analysis on demand.
+def append_turn_analysis(text: str, root: str | Path = ".", run_id: str | None = None) -> str:
+    """Append human-readable turn analysis to a per-run Markdown file.
 
-    Intended file:
-      .pm/audit/turn-analysis-log.md
+    Returns the resolved run_id.
     """
-    root_path = Path(root).resolve()
-    path = root_path / ".pm" / "audit" / "turn-analysis-log.md"
+    resolved_run_id = get_run_id(run_id)
+    path = turn_analysis_path(resolved_run_id, root)
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a", encoding="utf-8") as f:
-        f.write(f"\n---\n\n## Turn Analysis — {utc_now()}\n\n{text.strip()}\n")
+        f.write(f"\n---\n\n## Turn Analysis — {utc_now()}\n\nRun ID: `{resolved_run_id}`\n\n{text.strip()}\n")
+    return resolved_run_id
+
+
+def log_paths_summary(run_id: str, root: str | Path = ".") -> dict[str, str]:
+    """Return the expected per-run log paths for display or debugging."""
+    safe = sanitize_run_id(run_id)
+    return {
+        "run_id": safe,
+        "debug_log": str(run_debug_log_path(safe, root)),
+        "agent_action_log": str(agent_action_log_path(safe, root)),
+        "ide_event_log": str(ide_event_log_path(safe, root)),
+        "turn_analysis": str(turn_analysis_path(safe, root)),
+    }
 
 
 if __name__ == "__main__":
-    logger = setup_kiro_logger()
-    logger.info("Kiro-safe logger initialized")
+    smoke_run_id = get_run_id("RUN-SMOKE")
+    logger = setup_kiro_logger(run_id=smoke_run_id)
+    logger.info("Kiro parallel-safe logger initialized")
     append_agent_action_log({
-        "run_id": "RUN-SMOKE",
+        "run_id": smoke_run_id,
         "action_id": "ACT-SMOKE",
         "agent": "kiro_power_agent",
         "action_type": "OUTPUT_GENERATED",
         "status": "PASS",
         "summary": "Smoke event written by kiro_safe_logging.py",
     })
+    append_ide_event_log({
+        "run_id": smoke_run_id,
+        "event": "logger_smoke_test",
+        "status": "PASS",
+        "summary": "Smoke IDE/debug event written.",
+    })
+    append_turn_analysis("Smoke test completed for parallel-safe logging.", run_id=smoke_run_id)
+    logger.info("Log paths: %s", json.dumps(log_paths_summary(smoke_run_id), sort_keys=True))

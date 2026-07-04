@@ -2,27 +2,37 @@
 
 ## Purpose
 
-Define how the Planning & Financial Control Power logs continuously without slowing the agent or consuming LLM context.
+Define how the Planning & Financial Control Power logs continuously without slowing the agent, corrupting MCP stdio, or mixing parallel runs.
 
 ## Decision
 
-Use hybrid logging:
+Use hybrid, parallel-safe logging:
 
 ```txt
-1. Semantic PFC action log: always on
-2. Safe local debug log: always on for Python tools
-3. Turn analysis log: written only when requested or at explicit checkpoint
-4. Raw IDE event log: optional/debug/failure mode
+1. Semantic PFC action log: always on, per run
+2. Safe local debug log: always on for Python tools, per run
+3. Turn analysis log: written only when requested or at explicit checkpoint, per run
+4. Raw IDE event log: optional/debug/failure mode, per run
 ```
 
 ## Logging layers
 
 | Layer | File | Purpose | Default |
 |---|---|---|---|
-| Safe tool debug | `.kiro/logs/power_steps.log` | tail live while Kiro works | ON |
-| Semantic audit | `.pm/audit/agent-action-log.ndjson` | deep analysis and improvement | ON |
-| Turn analysis | `.pm/audit/turn-analysis-log.md` | human-readable review | ON-DEMAND |
-| Raw IDE events | `.pm/audit/ide-event-log.ndjson` | debug/failure trace | OPTIONAL |
+| Safe tool debug | `.kiro/logs/runs/{run_id}.log` | tail one Kiro run without interleaving | ON |
+| Semantic audit | `.pm/audit/runs/{run_id}.agent-action.ndjson` | deep analysis and improvement | ON |
+| Turn analysis | `.pm/audit/runs/{run_id}.turn-analysis.md` | human-readable review | ON-DEMAND |
+| Raw IDE events | `.pm/audit/runs/{run_id}.ide-event.ndjson` | debug/failure trace | OPTIONAL |
+| Aggregate debug | `.kiro/logs/power_steps.log` | convenience only, not source of truth | OFF by default |
+
+## Parallel execution rule
+
+```txt
+Every parallel run must write to its own files.
+Every log line must include run_id and pid.
+Per-run files are the source of truth.
+Shared aggregate logs are optional and best-effort only.
+```
 
 ## stdout rule for MCP stdio tools
 
@@ -93,11 +103,40 @@ Python logger records.
 LLM analyzes only when explicitly asked.
 ```
 
+## Runtime directory contract
+
+Bootstrap creates:
+
+```txt
+.kiro/logs/runs/
+.pm/audit/runs/
+```
+
+Runtime examples:
+
+```txt
+.kiro/logs/runs/RUN-20260704-120000-a1b2c3d4.log
+.pm/audit/runs/RUN-20260704-120000-a1b2c3d4.agent-action.ndjson
+.pm/audit/runs/RUN-20260704-120000-a1b2c3d4.ide-event.ndjson
+.pm/audit/runs/RUN-20260704-120000-a1b2c3d4.turn-analysis.md
+```
+
+## Redundancy rule
+
+Do not create root-level runtime logs as source of truth:
+
+```txt
+.pm/audit/agent-action-log.ndjson
+.pm/audit/ide-event-log.ndjson
+```
+
+Those shared files are deprecated because they are unsafe/noisy under parallel execution.
+
 ## Retention rule
 
 Runtime logs are local artifacts. Do not commit live logs.
 
-Commit templates and tooling only.
+Commit templates, policies, and tooling only.
 
 ## Failure rule
 

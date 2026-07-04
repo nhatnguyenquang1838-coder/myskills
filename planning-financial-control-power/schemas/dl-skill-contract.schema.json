@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/pfc/dl-skill-contract.schema.json",
+  "title": "DL Skill Contract",
+  "type": "object",
+  "required": ["contract_version", "skill_id", "skill_name", "category", "purpose", "input_contract", "output_contract", "pfc_integration"],
+  "properties": {
+    "contract_version": {"type": "string"},
+    "skill_id": {"type": "string", "pattern": "^DL-[0-9]{2}-[A-Z]+-[a-z0-9-]+$"},
+    "skill_name": {"type": "string"},
+    "category": {"enum": ["CORE", "PLAN", "FIN", "RISK", "PPL", "RPT", "TOOL", "OTHER"]},
+    "maturity": {"enum": ["missing", "scaffold", "functional", "detailed"]},
+    "owner": {"type": ["string", "null"]},
+    "status": {"enum": ["active", "draft", "deprecated"]},
+    "purpose": {
+      "type": "object",
+      "required": ["summary", "guarantees", "non_goals"],
+      "properties": {
+        "summary": {"type": "string"},
+        "guarantees": {"type": "array", "items": {"type": "string"}},
+        "non_goals": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "input_contract": {
+      "type": "object",
+      "required": ["required_inputs", "accepted_graph_nodes"],
+      "properties": {
+        "required_inputs": {"type": "array", "items": {"type": "string"}},
+        "optional_inputs": {"type": "array", "items": {"type": "string"}},
+        "accepted_graph_nodes": {"type": "array", "items": {"type": "string"}},
+        "accepted_files": {"type": "array", "items": {"type": "string"}},
+        "accepted_context_types": {"type": "array", "items": {"type": "string"}},
+        "forbidden_inputs": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "output_contract": {
+      "type": "object",
+      "required": ["required_outputs", "produced_graph_deltas"],
+      "properties": {
+        "required_outputs": {"type": "array", "items": {"type": "string"}},
+        "optional_outputs": {"type": "array", "items": {"type": "string"}},
+        "output_format": {"type": "string"},
+        "produced_graph_deltas": {"type": "array", "items": {"type": "string"}},
+        "produced_artifacts": {"type": "array", "items": {"type": "string"}},
+        "confidence_required": {"type": "boolean"}
+      }
+    },
+    "preconditions": {"type": "object"},
+    "postconditions": {"type": "object"},
+    "side_effects": {"type": "object"},
+    "constraints": {"type": "object"},
+    "failure_modes": {"type": "object"},
+    "control_requirements": {"type": "object"},
+    "evidence_rule": {"type": "object"},
+    "pfc_integration": {
+      "type": "object",
+      "required": ["supported_use_cases", "primary_agent_role", "graph_nodes_read", "graph_nodes_written_as_delta", "write_back_authority"],
+      "properties": {
+        "supported_use_cases": {"type": "array", "items": {"type": "string"}},
+        "primary_agent_role": {"type": "string"},
+        "graph_nodes_read": {"type": "array", "items": {"type": "string"}},
+        "graph_nodes_written_as_delta": {"type": "array", "items": {"type": "string"}},
+        "write_back_authority": {"enum": ["none", "draft_delta", "approved_delta_only"]},
+        "result_validator": {"type": "string"}
+      }
+    }
+  }
+}

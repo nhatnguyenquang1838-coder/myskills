@@ -3,7 +3,7 @@
 Version: `0.2.0-draft`
 Status: stronger MVP-live candidate
 
-This Kiro Power coordinates planning, resource allocation, cost calculation, reporting, intake/onboarding, context loading, historical data usage, DL Skill contract routing, workflow enforcement, agent action logging, and anti-hallucination controls.
+This Kiro Power coordinates planning, resource allocation, cost calculation, reporting, intake/onboarding, context loading, historical data usage, DL Skill contract routing, workflow enforcement, parallel-safe agent action logging, and anti-hallucination controls.
 
 ## Core model
 
@@ -29,7 +29,7 @@ PFC Power owns:
 - guardrails
 - circuit breaker
 - enforcement gates
-- agent action logging
+- parallel-safe agent action logging
 - checkpoint/audit
 
 DL Skills provide:
@@ -76,6 +76,7 @@ No DL Skill contract -> no controlled skill call
 History can challenge the plan, not replace the baseline
 DL Skills return draft deltas only; PFC controls write-back
 MCP stdio tools must not write diagnostics to stdout
+Parallel runs must write to per-run log files
 ```
 
 ## Live definition
@@ -90,7 +91,7 @@ The Power is considered MVP live when a user can:
 5. Run contract-driven planning/finance/reporting flows.
 6. Block unsupported official claims via Circuit Breaker.
 7. Produce run execution records and checkpoints.
-8. Capture semantic action logs for later analysis.
+8. Capture per-run semantic action logs for later analysis.
 ```
 
 ## Bootstrap target workspace
@@ -118,34 +119,33 @@ Created runtime structure:
 ├── audit/circuit-breaker-log.md
 ├── audit/context-retrieval-log.md
 ├── audit/run-execution-record.md
-├── audit/agent-action-log.ndjson
-├── audit/ide-event-log.ndjson
-├── audit/turn-analysis-log.md
+├── audit/runs/
 ├── reports/
 ├── history/
 ├── checkpoints/
 └── memory/memory-index.yaml
 
 .kiro/
-└── logs/
+└── logs/runs/
 ```
 
 ## Production logging model
 
-Use hybrid logging:
+Use hybrid, parallel-safe logging:
 
 ```txt
 Kiro agent keeps working.
-Python tools log safely to stderr and local files.
+Python tools log safely to stderr and per-run local files.
 LLM analyzes logs only when explicitly requested.
 ```
 
 | Layer | File | Purpose | Default |
 |---|---|---|---|
-| Safe tool debug | `.kiro/logs/power_steps.log` | live tail while Kiro works | ON |
-| Semantic audit | `.pm/audit/agent-action-log.ndjson` | deep analysis and continuous improvement | ON |
-| Turn analysis | `.pm/audit/turn-analysis-log.md` | human-readable review | ON-DEMAND |
-| Raw IDE events | `.pm/audit/ide-event-log.ndjson` | debug/failure trace | OPTIONAL |
+| Safe tool debug | `.kiro/logs/runs/{run_id}.log` | tail one Kiro run without interleaving | ON |
+| Semantic audit | `.pm/audit/runs/{run_id}.agent-action.ndjson` | deep analysis and continuous improvement | ON |
+| Turn analysis | `.pm/audit/runs/{run_id}.turn-analysis.md` | human-readable review | ON-DEMAND |
+| Raw IDE events | `.pm/audit/runs/{run_id}.ide-event.ndjson` | debug/failure trace | OPTIONAL |
+| Aggregate debug | `.kiro/logs/power_steps.log` | convenience only, not source of truth | OFF by default |
 
 Safe Python utility:
 
@@ -158,11 +158,12 @@ Usage:
 ```python
 from tools.kiro_safe_logging import setup_kiro_logger, append_agent_action_log
 
-logger = setup_kiro_logger()
+run_id = "RUN-001"
+logger = setup_kiro_logger(run_id=run_id)
 logger.info("Step: checking readiness")
 
 append_agent_action_log({
-    "run_id": "RUN-001",
+    "run_id": run_id,
     "action_id": "ACT-001",
     "agent": "pm-controller",
     "action_type": "READINESS_CHECKED",
@@ -171,10 +172,25 @@ append_agent_action_log({
 })
 ```
 
-Live tail:
+Live tail for one run:
 
 ```bash
-tail -f .kiro/logs/power_steps.log
+tail -f .kiro/logs/runs/RUN-001.log
+```
+
+Smoke-test safe logging:
+
+```bash
+python tools/kiro_safe_logging.py
+```
+
+Expected smoke files:
+
+```txt
+.kiro/logs/runs/RUN-SMOKE.log
+.pm/audit/runs/RUN-SMOKE.agent-action.ndjson
+.pm/audit/runs/RUN-SMOKE.ide-event.ndjson
+.pm/audit/runs/RUN-SMOKE.turn-analysis.md
 ```
 
 MCP stdio safety rule:
@@ -211,12 +227,6 @@ python tools/validate_dl_contract.py contracts/dl-skills/DL-27-FIN-project-cost-
 python tools/validate_dl_contract.py contracts/dl-skills/DL-26-RPT-report-builder.yaml
 ```
 
-Smoke-test safe logging:
-
-```bash
-python tools/kiro_safe_logging.py
-```
-
 ## Current MVP gate
 
 Target readiness:
@@ -237,6 +247,7 @@ Known limitations:
 Hook files are still templates until exact Kiro hook schema is verified.
 Validators still need to be run in a clean local checkout.
 Bootstrap still needs real target workspace evidence.
+Logging smoke test still needs to be run in a clean workspace.
 ```
 
 ## Work control

@@ -10,7 +10,8 @@
     "agent",
     "action_type",
     "status",
-    "summary"
+    "summary",
+    "bcbs239_principle_tag"
   ],
   "properties": {
     "log_level": {"enum": ["semantic_action"]},
@@ -49,6 +50,24 @@
     "mode": {"enum": ["M0", "M1", "M2", "M3", "UNKNOWN", null]},
     "run_type": {"type": ["string", "null"]},
     "status": {"enum": ["STARTED", "PASS", "DOWNGRADED", "BLOCKED", "FAILED", "SKIPPED"]},
+    "bcbs239_principle_tag": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "01-governance-and-infrastructure",
+          "02-risk-data-aggregation",
+          "03-risk-reporting-practices",
+          "04-supervisory-review-remediation",
+          "05-2023-progress-lessons",
+          "06-pfc-skill-guardrail-map",
+          "07-bcbs239-skill-contract-guidance"
+        ]
+      },
+      "description": "Required BCBS239 lineage/control tags. Values map to files in knowledge/references/bcbs239/."
+    },
     "input_refs": {"type": "array", "items": {"type": "string"}},
     "output_refs": {"type": "array", "items": {"type": "string"}},
     "graph_nodes_read": {"type": "array", "items": {"type": "string"}},

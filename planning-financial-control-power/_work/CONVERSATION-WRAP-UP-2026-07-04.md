@@ -8,7 +8,7 @@ Package: `planning-financial-control-power/`
 
 ```txt
 Status: stronger MVP-live candidate
-Readiness: 3.91 / 5
+Readiness: 3.99 / 5
 ```
 
 ## What was built in this conversation
@@ -29,6 +29,24 @@ Readiness: 3.91 / 5
 13. Agent action logging policy/schema
 14. Production-safe logging layer for Kiro/Python tools
 15. Parallel-safe per-run logging cleanup
+16. Bounded-Convergence-Loop and State Lock
+17. Tiered blocking/async hook execution
+18. Circuit Breaker Isolate-and-Condense recovery
+19. BCBS239 action log tags and deterministic DL-27 finance invariants
+```
+
+## Latest runtime decision
+
+Use bounded deterministic orchestration:
+
+```txt
+Bounded-Convergence-Loop: MAX_ITERATIONS = 3
+State Lock protects Project Control Graph write path
+Tier 1 hooks are blocking deterministic checks
+Tier 2 hooks are async qualitative audits
+Circuit Breaker recovery never receives full trailing conversation history
+BCBS239 principle tags are required in semantic action logs
+DL-27 finance outputs must pass deterministic total reconciliation
 ```
 
 ## Latest logging decision
@@ -57,7 +75,7 @@ Shared aggregate logs are optional only.
 ## Latest files added
 
 ```txt
-checkpoints/2026-07-04-parallel-safe-logging-cleanup.md
+checkpoints/2026-07-04-convergence-tiered-hooks-bcbs239-invariants.md
 ```
 
 ## Latest files updated
@@ -66,30 +84,18 @@ checkpoints/2026-07-04-parallel-safe-logging-cleanup.md
 README.md
 _work/TASKS.md
 _work/CONVERSATION-WRAP-UP-2026-07-04.md
+steering/16-run-graph-policy.md
+steering/11-circuit-breaker-policy.md
 steering/20-logging-depth-policy.md
-tools/kiro_safe_logging.py
-tools/logging-usage.md
+knowledge/runtime/pfc-runtime-execution-engine.md
+knowledge/support/memory-context-controller.md
+schemas/kiro-hook.schema.json
 schemas/agent-action-log.schema.json
-scripts/install-workspace.sh
-scripts/install-workspace.ps1
-.gitignore
-```
-
-## Latest cleanup
-
-Removed redundant shared runtime templates:
-
-```txt
-templates/agent-action-log.yaml
-templates/agent-action-log.ndjson
-templates/ide-event-log.ndjson
-```
-
-Bootstrap now creates directories only:
-
-```txt
-.pm/audit/runs/
-.kiro/logs/runs/
+templates/circuit-breaker-log.md
+tools/validate_kiro_hooks.py
+tools/kiro_safe_logging.py
+tools/check_pfc_output_enforcement.py
+hooks/kiro-v1/pfc-workspace-hooks.json
 ```
 
 ## Key commands for next chat / Kiro
@@ -124,18 +130,28 @@ python tools/validate_dl_contract.py contracts/dl-skills/DL-27-FIN-project-cost-
 python tools/validate_dl_contract.py contracts/dl-skills/DL-26-RPT-report-builder.yaml
 ```
 
+Validate hooks:
+
+```bash
+python tools/validate_kiro_hooks.py hooks/kiro-v1/pfc-workspace-hooks.json
+```
+
+Run deterministic output enforcement:
+
+```bash
+python tools/check_pfc_output_enforcement.py path/to/output.md
+```
+
 ## Remaining blockers
 
 ```txt
-BLOCKER-06: hooks not schema-verified
 BLOCKER-07: validators not yet run in clean local checkout
-BLOCKER-08: bootstrap not tested in real target workspace
-BLOCKER-10: logging smoke test not yet run in clean workspace
+BLOCKER-16: tiered hooks/state lock/invariant runtime pilots not yet run in clean checkout
 ```
 
 ## Recommended next prompt
 
 ```txt
 Continue PFC Power from _work/CONVERSATION-WRAP-UP-2026-07-04.md.
-First close remaining blockers: verify Kiro hook schema, run validators in clean checkout, test bootstrap in real workspace, run logging smoke test, then update readiness scorecard and checkpoint.
+Run clean-checkout validators, run tiered hook validator, create DL-27 passing/failing invariant fixtures, pilot State Lock under concurrent Kiro workflow, pilot Isolate-and-Condense after a real breaker trip, then update readiness scorecard and checkpoint.
 ```

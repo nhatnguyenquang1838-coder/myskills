@@ -1,9 +1,9 @@
 # Planning & Financial Control Power
 
 Version: `0.2.0-draft`
-Status: MVP live path in progress
+Status: stronger MVP-live candidate
 
-This Kiro Power coordinates planning, resource allocation, cost calculation, reporting, intake/onboarding, context loading, historical data usage, DL Skill contract routing, and anti-hallucination controls.
+This Kiro Power coordinates planning, resource allocation, cost calculation, reporting, intake/onboarding, context loading, historical data usage, DL Skill contract routing, workflow enforcement, agent action logging, and anti-hallucination controls.
 
 ## Core model
 
@@ -28,6 +28,8 @@ PFC Power owns:
 - output validation
 - guardrails
 - circuit breaker
+- enforcement gates
+- agent action logging
 - checkpoint/audit
 
 DL Skills provide:
@@ -42,15 +44,15 @@ DL Skills provide:
 POWER.md
 steering/      operating policies and control rules
 contracts/     external DL Skill contracts
-schemas/       Project Control Graph and contract schemas
-tools/         validators
+schemas/       Project Control Graph, contract, and audit schemas
+tools/         validators, output checkers, logging utilities
 scripts/       workspace bootstrap scripts
 skills/        Power-owned support skills
 agents/        role definitions
 templates/     reusable workspace starter files
 hooks/         hook templates until schema is verified
 knowledge/     reusable PM methods, BCBS239 references, standards, patterns
-tests/         scenarios, fixtures, expected outputs
+tests/         scenarios, fixtures, expected outputs, enforcement matrix
 _work/         plan/tasks/risks/decisions to bring Power live
 ```
 
@@ -73,6 +75,7 @@ No link -> no claim
 No DL Skill contract -> no controlled skill call
 History can challenge the plan, not replace the baseline
 DL Skills return draft deltas only; PFC controls write-back
+MCP stdio tools must not write diagnostics to stdout
 ```
 
 ## Live definition
@@ -87,6 +90,7 @@ The Power is considered MVP live when a user can:
 5. Run contract-driven planning/finance/reporting flows.
 6. Block unsupported official claims via Circuit Breaker.
 7. Produce run execution records and checkpoints.
+8. Capture semantic action logs for later analysis.
 ```
 
 ## Bootstrap target workspace
@@ -114,11 +118,73 @@ Created runtime structure:
 ├── audit/circuit-breaker-log.md
 ├── audit/context-retrieval-log.md
 ├── audit/run-execution-record.md
+├── audit/agent-action-log.ndjson
+├── audit/ide-event-log.ndjson
+├── audit/turn-analysis-log.md
 ├── reports/
 ├── history/
 ├── checkpoints/
 └── memory/memory-index.yaml
+
+.kiro/
+└── logs/
 ```
+
+## Production logging model
+
+Use hybrid logging:
+
+```txt
+Kiro agent keeps working.
+Python tools log safely to stderr and local files.
+LLM analyzes logs only when explicitly requested.
+```
+
+| Layer | File | Purpose | Default |
+|---|---|---|---|
+| Safe tool debug | `.kiro/logs/power_steps.log` | live tail while Kiro works | ON |
+| Semantic audit | `.pm/audit/agent-action-log.ndjson` | deep analysis and continuous improvement | ON |
+| Turn analysis | `.pm/audit/turn-analysis-log.md` | human-readable review | ON-DEMAND |
+| Raw IDE events | `.pm/audit/ide-event-log.ndjson` | debug/failure trace | OPTIONAL |
+
+Safe Python utility:
+
+```txt
+tools/kiro_safe_logging.py
+```
+
+Usage:
+
+```python
+from tools.kiro_safe_logging import setup_kiro_logger, append_agent_action_log
+
+logger = setup_kiro_logger()
+logger.info("Step: checking readiness")
+
+append_agent_action_log({
+    "run_id": "RUN-001",
+    "action_id": "ACT-001",
+    "agent": "pm-controller",
+    "action_type": "READINESS_CHECKED",
+    "status": "PASS",
+    "summary": "Readiness mode selected."
+})
+```
+
+Live tail:
+
+```bash
+tail -f .kiro/logs/power_steps.log
+```
+
+MCP stdio safety rule:
+
+```txt
+stdout = protocol channel
+stderr/local file = logging channel
+```
+
+Do not use Python `print()` or Node `console.log()` for diagnostics inside stdio MCP tools. Use `logging`, `print(..., file=sys.stderr)`, `console.error()`, or append-only local log files.
 
 ## Validate assets
 
@@ -145,6 +211,12 @@ python tools/validate_dl_contract.py contracts/dl-skills/DL-27-FIN-project-cost-
 python tools/validate_dl_contract.py contracts/dl-skills/DL-26-RPT-report-builder.yaml
 ```
 
+Smoke-test safe logging:
+
+```bash
+python tools/kiro_safe_logging.py
+```
+
 ## Current MVP gate
 
 Target readiness:
@@ -153,10 +225,18 @@ Target readiness:
 >= 3.7 / 5
 ```
 
-Known limitation:
+Current candidate score:
+
+```txt
+3.91 / 5
+```
+
+Known limitations:
 
 ```txt
 Hook files are still templates until exact Kiro hook schema is verified.
+Validators still need to be run in a clean local checkout.
+Bootstrap still needs real target workspace evidence.
 ```
 
 ## Work control

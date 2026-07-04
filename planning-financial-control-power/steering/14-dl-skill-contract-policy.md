@@ -2,7 +2,14 @@
 
 ## Purpose
 
-Define how Planning & Financial Control Power routes work to DL Skills.
+Define how the Planning & Financial Control Power interacts with external DL Skills.
+
+## Core rule
+
+```txt
+DL Skills are black boxes with contracts.
+The Power owns orchestration, graph, validation, guardrails, circuit breaker, and write-back.
+```
 
 ## Boundary
 
@@ -15,9 +22,19 @@ PFC does not modify or depend on DL Skill implementation details.
 ## Authoritative contract files
 
 ```txt
-knowledge/contracts/dl-skill-contract-standard.md
-knowledge/contracts/pfc-required-dl-skill-contracts.md
-templates/dl-skill-contract.md
+contracts/dl-skill-contract-schema.yaml
+contracts/dl-skill-contract-registry.md
+contracts/dl-skill-contract-examples.md
+schemas/dl-skill-contract.schema.json
+```
+
+Samples and historical behavior must not be treated as contracts.
+
+## Dependency direction
+
+```txt
+Power -> DL Skill contracts
+DL Skills must not depend on Power internals
 ```
 
 ## Routing rule
@@ -33,6 +50,30 @@ Before routing to a DL Skill, PM Controller must check:
 6. Does the contract declare required circuit breakers?
 7. Does the contract declare guardrails, bias risks, and hallucination risks?
 8. Is the contract maturity sufficient for the requested output authority?
+```
+
+## Required behavior before calling a DL Skill
+
+```txt
+1. Find the skill contract in the registry.
+2. Check supported use cases.
+3. Check required inputs.
+4. Check accepted graph nodes.
+5. Check preconditions.
+6. Check readiness mode compatibility.
+7. Prepare a Run Context Graph package.
+8. Declare expected outputs.
+```
+
+## Required behavior after calling a DL Skill
+
+```txt
+1. Validate required outputs exist.
+2. Validate output format.
+3. Validate produced graph delta node types.
+4. Validate no authority boundary was crossed.
+5. Validate evidence/assumption/decision/derived support.
+6. Run circuit breaker if validation fails.
 ```
 
 ## Contract maturity usage
@@ -60,6 +101,14 @@ Only PM Controller may write approved deltas to:
 .pm/control/project-control.yaml
 ```
 
+## Write-back authority values
+
+| Contract value | Meaning |
+|---|---|
+| none | skill only produces text/view, no graph delta |
+| draft_delta | skill may propose graph delta |
+| approved_delta_only | Power may write delta only after validation and approval |
+
 ## Output authority rule
 
 DL Skill output is not automatically trusted.
@@ -75,6 +124,19 @@ circuit-breaker
 
 before official output or graph write-back.
 
+## Contract breaker
+
+Open Contract breaker when:
+
+```txt
+- contract missing
+- preconditions fail
+- required output missing
+- unauthorized graph delta returned
+- skill makes prohibited claim
+- output cannot be validated
+```
+
 ## Failure behavior
 
 If the required DL contract is missing or incomplete:
@@ -85,6 +147,15 @@ If the required DL contract is missing or incomplete:
 3. Open Circuit Breaker HALF_OPEN or OPEN.
 4. Create missing contract item.
 5. Ask for contract completion only if critical.
+```
+
+If a contract fails after execution:
+
+```txt
+1. Do not use the output as fact.
+2. Return contract failure reason.
+3. Create missing-data or skill-gap item.
+4. Downgrade use case if possible.
 ```
 
 ## Prohibited behavior
@@ -98,4 +169,6 @@ let a DL Skill declare official RAG/status by itself
 let a DL Skill write baseline directly
 use sample output as contract
 use historical DL behavior as current contract
+use history as current truth
+accept output that exceeds contract constraints
 ```
